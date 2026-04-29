@@ -123,12 +123,6 @@ flowchart LR
   B --> M1
 ```
 
-Export target / path tujuan export PNG:
-
-- `docs/images/monitoring-topology.png`
-
-![Monitoring Topology](docs/images/monitoring-topology.png)
-
 ---
 
 ## Repository Structure / Struktur Repository
