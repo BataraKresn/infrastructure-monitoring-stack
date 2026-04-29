@@ -100,14 +100,6 @@ flowchart LR
   style PROD fill:#FFEDD5,stroke:#F97316,stroke-width:2px,color:#7C2D12
 ```
 
-### Link image topology (PNG export target)
-
-> Export diagram Mermaid ke PNG lalu simpan ke path ini:
-
-- `docs/images/monitoring-topology.png`
-
-![Monitoring Topology](docs/images/monitoring-topology.png)
-
 ---
 
 ## Struktur Repository
