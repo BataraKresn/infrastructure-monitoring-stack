@@ -1,16 +1,33 @@
 # Monitoring Stack (Prometheus + Grafana + Alertmanager)
 
-Repository ini berisi konfigurasi **monitoring terpusat** untuk lingkungan **development** dan **production** berbasis Docker Compose.
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![Prometheus](https://img.shields.io/badge/Prometheus-v2.51.2-E6522C?logo=prometheus&logoColor=white)
+![Grafana](https://img.shields.io/badge/Grafana-v10.4.2-F46800?logo=grafana&logoColor=white)
+![Last Update](https://img.shields.io/badge/Last%20Update-2026--04--29-0A66C2)
 
-Komponen utama:
+This repository contains a production-ready monitoring stack for mixed infrastructure (development + production), powered by Prometheus, Alertmanager, Grafana, and Blackbox Exporter.
 
-- **Prometheus** untuk scraping metrics, rule evaluation, dan alert generation.
-- **Alertmanager** untuk routing notifikasi berdasarkan severity, environment, dan role.
-- **Grafana** untuk dashboard observability dan visualisasi metrik.
-- **Blackbox Exporter** untuk HTTP/SMTP/TCP probing.
-- **Exporter host/service**: Node Exporter, cAdvisor, PM2 Exporter, Elasticsearch Exporter, Postfix Exporter.
+Repositori ini berisi stack monitoring siap produksi untuk infrastruktur campuran (development + production), menggunakan Prometheus, Alertmanager, Grafana, dan Blackbox Exporter.
 
-> Dokumentasi ini dirancang sebagai referensi operasional harian (deploy, validasi, troubleshooting).
+---
+
+## Table of Contents / Daftar Isi
+
+- [Quick Start](#quick-start)
+- [Prerequisites](#prerequisites)
+- [Architecture Overview / Ringkasan Arsitektur](#architecture-overview--ringkasan-arsitektur)
+- [Topology](#topology)
+- [Repository Structure / Struktur Repository](#repository-structure--struktur-repository)
+- [Core Configuration / Konfigurasi Utama](#core-configuration--konfigurasi-utama)
+- [Prometheus Scrape Jobs](#prometheus-scrape-jobs)
+- [Alert Rules Summary](#alert-rules-summary)
+- [Alertmanager Routing Summary](#alertmanager-routing-summary)
+- [Daily Operations / Operasional Harian](#daily-operations--operasional-harian)
+- [Security Notes / Catatan Keamanan](#security-notes--catatan-keamanan)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
 
 ## Quick Start
 
@@ -20,31 +37,49 @@ docker compose up -d
 docker compose ps
 ```
 
-## Daftar Isi
+---
 
-- [Arsitektur Ringkas](#arsitektur-ringkas)
-- [Topologi](#topologi)
-- [Struktur Repository](#struktur-repository)
-- [Konfigurasi Utama](#konfigurasi-utama)
-- [Daftar Job Scrape Prometheus](#daftar-job-scrape-prometheus)
-- [Alerting Rules yang Aktif](#alerting-rules-yang-aktif)
-- [Routing Notifikasi Alertmanager](#routing-notifikasi-alertmanager)
-- [Provisioning Grafana](#provisioning-grafana)
-- [Cara Menjalankan](#cara-menjalankan)
-- [Operasional Harian](#operasional-harian)
-- [Security Notes (Penting)](#security-notes-penting)
+## Prerequisites
 
-## Arsitektur Ringkas
+Before running this stack, ensure the following requirements are available:
 
-- Monitoring server menjalankan 5 container utama: `prometheus`, `alertmanager`, `grafana`, `blackbox-exporter`, `node-exporter-local`.
-- Prometheus scrape berbagai endpoint metrik dari server target (port 9100/8080/9209/9114/9154) dan probe blackbox.
-- Alert rules dievaluasi setiap 15 detik, lalu dikirim ke Alertmanager.
-- Alertmanager route notifikasi berdasarkan severity/env/role (critical, prod warning, mail, elasticsearch, gitea, dev, info).
-- Grafana otomatis provision datasource + dashboard dari folder repository.
+- Docker Engine 24+ and Docker Compose plugin
+- Linux host with systemd
+- Open ports for monitoring services (`3000`, `9090`, `9093`, `9115`)
+- Network access from monitoring server to exporter targets
+- `.env` file for runtime secrets and environment settings
 
-## Topologi
+Sebelum menjalankan stack ini, pastikan:
 
-### Diagram Mermaid
+- Docker Engine 24+ dan Docker Compose plugin sudah terpasang
+- Host Linux menggunakan systemd
+- Port layanan monitoring terbuka (`3000`, `9090`, `9093`, `9115`)
+- Monitoring server bisa mengakses endpoint exporter target
+- File `.env` tersedia untuk secret dan variabel environment
+
+---
+
+## Architecture Overview / Ringkasan Arsitektur
+
+**EN**
+
+- Monitoring server runs 5 primary services: `prometheus`, `alertmanager`, `grafana`, `blackbox-exporter`, `node-exporter-local`.
+- Prometheus scrapes application and host metrics from multiple target servers.
+- Alert rules are evaluated every 15 seconds and routed through Alertmanager.
+- Grafana is provisioned automatically for datasource and dashboards.
+
+**ID**
+
+- Monitoring server menjalankan 5 service utama: `prometheus`, `alertmanager`, `grafana`, `blackbox-exporter`, `node-exporter-local`.
+- Prometheus melakukan scrape metrics aplikasi dan host dari banyak server target.
+- Alert rule dievaluasi setiap 15 detik lalu dirouting oleh Alertmanager.
+- Grafana diprovision otomatis untuk datasource dan dashboard.
+
+---
+
+## Topology
+
+### Mermaid Source
 
 ```mermaid
 flowchart LR
@@ -88,62 +123,47 @@ flowchart LR
   B --> M1
 ```
 
-### Export PNG
-
-Simpan hasil export diagram ke path berikut:
+Export target / path tujuan export PNG:
 
 - `docs/images/monitoring-topology.png`
 
 ![Monitoring Topology](docs/images/monitoring-topology.png)
 
-## Struktur Repository
+---
 
-- `docker-compose.yml` — service monitoring stack.
-- `prometheus/prometheus.yml` — konfigurasi scrape + alertmanager + rule files.
-- `prometheus/web.yml` — basic auth untuk UI/API Prometheus.
-- `prometheus/rules/*.yml` — kumpulan alert rules per domain.
-- `alertmanager/alertmanager.yml` — route, receiver, inhibit, SMTP.
-- `alertmanager/templates/email.tmpl` — template email HTML/text.
-- `blackbox/blackbox.yml` — module probe HTTP/TCP/SMTP/ICMP.
-- `grafana/provisioning/datasources/prometheus.yml` — datasource provisioning.
-- `grafana/provisioning/dashboards/dashboards.yml` — dashboard provider provisioning.
-- `grafana/provisioning/dashboards/*.json` — dashboard JSON (termasuk Gitea).
-- `scripts/*.sh` — deploy + instalasi agents di target host.
-- `docs/topology.mmd` — source kode Mermaid topologi.
-- `docs/images/` — folder output image diagram (PNG/SVG).
+## Repository Structure / Struktur Repository
+
+- `docker-compose.yml` — main monitoring services
+- `prometheus/prometheus.yml` — scrape config + rule files + alertmanager integration
+- `prometheus/web.yml` — Prometheus basic auth config
+- `prometheus/rules/*.yml` — rule groups (node, docker, mail, PM2, Elasticsearch, Jenkins)
+- `alertmanager/alertmanager.yml` — routing tree, receivers, inhibit rules
+- `alertmanager/templates/email.tmpl` — custom email templates
+- `blackbox/blackbox.yml` — probe modules (HTTP/TCP/SMTP/ICMP)
+- `grafana/provisioning/**` — datasource and dashboard provisioning
+- `scripts/*.sh` — deployment and remote agent installation helpers
+- `docs/topology.mmd` — Mermaid source for topology diagram
+- `docs/images/` — image export directory
 
 ---
 
-## Konfigurasi Utama
+## Core Configuration / Konfigurasi Utama
 
-### 1) Docker Compose services
+### Runtime services
 
-Service aktif:
+- Prometheus: `prom/prometheus:v2.51.2`
+- Alertmanager: `prom/alertmanager:v0.27.0`
+- Grafana: `grafana/grafana:10.4.2`
+- Blackbox Exporter: `prom/blackbox-exporter:v0.25.0`
+- Node Exporter (local): `prom/node-exporter:v1.8.0`
 
-1. `prometheus` (`prom/prometheus:v2.51.2`)
-   - retention: 30d / 10GB
-   - rule mount: `./prometheus/rules`
-   - config auth web: `prometheus/web.yml`
-2. `alertmanager` (`prom/alertmanager:v0.27.0`)
-3. `grafana` (`grafana/grafana:10.4.2`)
-   - provisioning aktif dari `./grafana/provisioning`
-4. `blackbox-exporter` (`prom/blackbox-exporter:v0.25.0`)
-5. `node-exporter-local` (`prom/node-exporter:v1.8.0`)
-
-### 2) Prometheus global
+### Prometheus globals
 
 - `scrape_interval: 15s`
 - `evaluation_interval: 15s`
 - alerting target: `alertmanager:9093`
-- rule files:
-  - `node_alerts.yml`
-  - `docker_alerts.yml`
-  - `elasticsearch_alerts.yml`
-  - `mail_alerts.yml`
-  - `pm2_alerts.yml`
-  - `jenkins_alerts.yml`
 
-### 3) Blackbox modules
+### Blackbox modules
 
 - `http_2xx`
 - `http_2xx_insecure`
@@ -151,159 +171,61 @@ Service aktif:
 - `smtp_starttls`
 - `icmp`
 
-### 4) Grafana provisioning
+---
 
-- Datasource default: **Prometheus** (`http://prometheus:9090`) via basic auth env vars.
-- Dashboard provider path: `/etc/grafana/provisioning/dashboards`.
+## Prometheus Scrape Jobs
+
+Key jobs currently configured:
+
+- Core: `prometheus`, `blackbox`
+- App: `jenkins`, `gitea`
+- Host/container: `node-*`, `cadvisor-*`, `elasticsearch`
+- Probe: `blackbox-http`, `blackbox-smtp`, `blackbox-tcp`
+
+> Full details are defined in `prometheus/prometheus.yml`.
 
 ---
 
-## Daftar Job Scrape Prometheus
+## Alert Rules Summary
 
-### Internal
+Active rule groups:
 
-- `prometheus`
-- `blackbox`
+- `node_alerts.yml`
+- `docker_alerts.yml`
+- `elasticsearch_alerts.yml`
+- `mail_alerts.yml`
+- `pm2_alerts.yml`
+- `jenkins_alerts.yml`
 
-### Aplikasi/Platform
-
-- `jenkins` (`https://jenkins.mugshot.dev/prometheus/`)
-- `gitea` (`http://30.30.30.123:80/metrics`, bearer auth)
-
-### Host & container metrics
-
-- `node-dev-sat-baremetal`
-- `cadvisor-dev-sat-baremetal`
-- `node-server-be-gotham`
-- `cadvisor-server-be-gotham`
-- `node-be-leaked-gotham`
-- `cadvisor-be-leaked-gotham`
-- `node-baremetal-ubuntu`
-- `cadvisor-baremetal-ubuntu`
-- `node-mail-svr`
-- `cadvisor-mail-svr`
-- `node-prod-gitrepo-sat`
-- `cadvisor-prod-gitrepo-sat`
-- `elasticsearch`
-
-### Probing via blackbox
-
-- `blackbox-http`
-- `blackbox-smtp`
-- `blackbox-tcp`
+> Rule expressions and thresholds are maintained in `prometheus/rules/`.
 
 ---
 
-## Alerting Rules yang Aktif
+## Alertmanager Routing Summary
 
-### `node_alerts.yml`
+Primary routes:
 
-- `InstanceDown`
-- `HighCPUUsage`, `CriticalCPUUsage`
-- `HighMemoryUsage`, `CriticalMemoryUsage`
-- `DiskSpaceWarning`, `DiskSpaceCritical`, `DiskWillFillIn4Hours`
-- `HighDiskIOWait`
-- `HighNetworkReceive`
-- `HighLoadAverage`
-- `SystemReboot`
+- `severity=critical` → `critical-receiver`
+- `env=production + severity=warning` → `prod-receiver`
+- `role=mail` → `mail-receiver`
+- `role=elasticsearch` → `elastic-receiver`
+- `role=gitea` → `gitea-receiver`
+- `env=development` → `dev-receiver`
+- `severity=info` → `info-receiver`
 
-### `docker_alerts.yml`
-
-- `ContainerDown`
-- `ContainerHighCPU`
-- `ContainerHighMemory`
-- `ContainerMemoryNoLimit`
-- `ContainerRestartLoop`
-- `ContainerOOMKilled`
-- `DockerDaemonDown`
-
-### `elasticsearch_alerts.yml`
-
-- `ElasticsearchClusterRed`, `ElasticsearchClusterYellow`
-- `ElasticsearchNodesMissing`
-- `ElasticsearchJVMHeapHigh`, `ElasticsearchJVMHeapCritical`
-- `ElasticsearchDiskWatermarkLow`, `ElasticsearchDiskWatermarkHigh`
-- `ElasticsearchSlowQueries`
-- `ElasticsearchUnassignedShards`
-- `ElasticsearchExporterDown`
-
-### `mail_alerts.yml`
-
-- `SMTPDown`, `IMAPSDown`
-- `PostfixQueueHigh`, `PostfixQueueCritical`, `PostfixOldMessages`
-- `SMTPSlowResponse`
-
-### `pm2_alerts.yml`
-
-- `PM2ProcessStopped`
-- `PM2ProcessRestarting`, `PM2ProcessRestartCritical`
-- `PM2HighMemory`
-- `PM2HighCPU`
-
-### `jenkins_alerts.yml`
-
-- `JenkinsDown`
-- `JenkinsHealthCheckDegraded`
-- `JenkinsExecutorUsageHigh`, `JenkinsExecutorUsageCritical`
-- `JenkinsQueueLengthHigh`
+> Inhibit rules are configured in `alertmanager/alertmanager.yml`.
 
 ---
 
-## Routing Notifikasi Alertmanager
+## Daily Operations / Operasional Harian
 
-Default grouping:
-
-- `group_by: [alertname, server, env]`
-- `group_wait: 10s`
-- `group_interval: 5m`
-- `repeat_interval: 4h`
-
-Route spesifik:
-
-- `severity=critical` → `critical-receiver` (repeat 1h)
-- `env=production + severity=warning` → `prod-receiver` (repeat 8h)
-- `role=mail` → `mail-receiver` (repeat 1h)
-- `role=elasticsearch` → `elastic-receiver` (repeat 2h)
-- `role=gitea` → `gitea-receiver` (repeat 4h)
-- `env=development` → `dev-receiver` (repeat 8h)
-- `severity=info` → `info-receiver` (repeat 24h)
-
-Inhibit rules:
-
-- `InstanceDown` men-suppress alert turunan host yang sama
-- `critical` men-suppress `warning` yang sejenis pada server sama
-- `ElasticsearchClusterRed` men-suppress `ElasticsearchClusterYellow`
-
----
-
-## Provisioning Grafana
-
-- Datasource Prometheus otomatis saat startup.
-- Dashboard provider mode file provisioning.
-- Dashboard Gitea ada di:
-  - `grafana/provisioning/dashboards/gitea-overview.json`
-
----
-
-## Cara Menjalankan
-
-### Jalankan stack
-
-1. Isi `.env` (lihat variabel pada `docker-compose.yml`)
-2. Start:
-
-```bash
-cd /home/devel/monitoring
-docker compose up -d
-```
-
-### Validasi konfigurasi Prometheus
+### Validate Prometheus config
 
 ```bash
 docker compose exec prometheus promtool check config /etc/prometheus/prometheus.yml
 ```
 
-### Restart service penting setelah perubahan
+### Restart critical services
 
 ```bash
 docker compose restart prometheus
@@ -311,21 +233,7 @@ docker compose restart alertmanager
 docker compose restart grafana
 ```
 
-### Script deploy cepat
-
-```bash
-./scripts/deploy.sh
-```
-
----
-
-## Operasional Harian
-
-### Cek target scrape
-
-- Prometheus UI: `http://<monitoring-host>:9090/targets`
-
-### Cek health stack
+### Check health and logs
 
 ```bash
 docker compose ps
@@ -334,7 +242,7 @@ docker compose logs --tail=100 alertmanager
 docker compose logs --tail=100 grafana
 ```
 
-### Install agent di server target
+### Install remote agents
 
 ```bash
 sudo ./scripts/install-agents.sh --with-docker --with-pm2
@@ -344,14 +252,43 @@ sudo ./scripts/install-agents.sh --with-postfix
 
 ---
 
-## Security Notes (Penting)
+## Security Notes / Catatan Keamanan
 
-1. **Jangan commit secret** (`.env`, password SMTP, token bearer, kredensial auth).
-2. Saat ini ada secret hardcoded di beberapa config operasional — sangat disarankan:
-   - pindahkan ke env/secret store,
-   - rotate credential yang sudah terlanjur terekspos.
-3. Batasi akses network exporter hanya dari monitoring server.
-4. Gunakan TLS/reverse proxy untuk endpoint publik (Grafana/Prometheus/Alertmanager).
+- Do not commit runtime secrets (`.env`, SMTP credentials, tokens).
+- Rotate credentials that were ever exposed in plain text.
+- Restrict exporter ports to monitoring server sources only.
+- Use TLS and/or reverse proxy for public-facing endpoints.
+
+- Jangan commit secret runtime (`.env`, kredensial SMTP, token).
+- Lakukan rotasi kredensial yang pernah terekspos dalam bentuk plaintext.
+- Batasi akses port exporter hanya dari monitoring server.
+- Gunakan TLS dan/atau reverse proxy untuk endpoint publik.
 
 ---
+
+## Contributing
+
+Contributions are welcome through pull requests.
+
+Please follow these minimum checks before submitting:
+
+1. Validate Prometheus config and rules.
+2. Keep changes scoped and documented.
+3. Update `README.md` when behavior/configuration changes.
+
+Kontribusi diterima melalui pull request.
+
+Checklist minimum sebelum submit:
+
+1. Validasi konfigurasi dan rule Prometheus.
+2. Jaga perubahan tetap terfokus dan terdokumentasi.
+3. Update `README.md` jika ada perubahan behavior/konfigurasi.
+
+---
+
+## License
+
+This project is licensed under the MIT License. See [`LICENSE`](LICENSE) for details.
+
+Proyek ini menggunakan lisensi MIT. Lihat file [`LICENSE`](LICENSE) untuk detail.
 
