@@ -1,0 +1,69 @@
+groups:
+
+  # ===========================================================
+  # Jenkins Alerts
+  # ===========================================================
+  - name: jenkins_alerts
+    interval: 30s
+    rules:
+
+      # ---------------------------------------------------------
+      # Jenkins endpoint down
+      # ---------------------------------------------------------
+      - alert: JenkinsDown
+        expr: up{job="jenkins"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Jenkins {{ $labels.server }} DOWN"
+          description: "Prometheus gagal scrape Jenkins ({{ $labels.instance }}) selama lebih dari 2 menit."
+
+      # ---------------------------------------------------------
+      # Jenkins internal health check failed
+      # ---------------------------------------------------------
+      - alert: JenkinsHealthCheckDegraded
+        expr: jenkins_health_check_score{job="jenkins"} < 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Health check Jenkins menurun di {{ $labels.server }}"
+          description: "Nilai health check Jenkins saat ini {{ $value | printf \"%.2f\" }} (expected: 1)."
+
+      # ---------------------------------------------------------
+      # Executors are almost fully utilized
+      # ---------------------------------------------------------
+      - alert: JenkinsExecutorUsageHigh
+        expr: |
+          (sum by(server) (default_jenkins_executors_busy{job="jenkins"}) /
+           clamp_min(sum by(server) (default_jenkins_executors_online{job="jenkins"}), 1)) * 100 > 85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Executor Jenkins tinggi di {{ $labels.server }}"
+          description: "Pemakaian executor Jenkins sudah {{ $value | printf \"%.1f\" }}% selama 10 menit."
+
+      - alert: JenkinsExecutorUsageCritical
+        expr: |
+          (sum by(server) (default_jenkins_executors_busy{job="jenkins"}) /
+           clamp_min(sum by(server) (default_jenkins_executors_online{job="jenkins"}), 1)) * 100 > 95
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Executor Jenkins KRITIS di {{ $labels.server }}"
+          description: "Pemakaian executor Jenkins sudah {{ $value | printf \"%.1f\" }}% selama 5 menit."
+
+      # ---------------------------------------------------------
+      # Queue backlog
+      # ---------------------------------------------------------
+      - alert: JenkinsQueueLengthHigh
+        expr: sum by(server) (default_jenkins_executors_queue_length{job="jenkins"}) > 10
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Queue Jenkins panjang di {{ $labels.server }}"
+          description: "Jumlah antrean executor Jenkins saat ini {{ $value | printf \"%.0f\" }} selama 10 menit."

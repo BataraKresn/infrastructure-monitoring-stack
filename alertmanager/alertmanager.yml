@@ -1,0 +1,180 @@
+global:
+  resolve_timeout: 5m
+  smtp_smarthost: "mail.sateknologi.id:587"
+  smtp_from: "admin@sateknologi.id"
+  smtp_auth_username: "admin@sateknologi.id"
+  smtp_auth_password: "66,MeNsus,{"
+  smtp_hello: "mail.sateknologi.id"
+  smtp_require_tls: true
+
+# -----------------------------------------------------------
+# Templates
+# -----------------------------------------------------------
+templates:
+  - "/etc/alertmanager/templates/*.tmpl"
+
+# -----------------------------------------------------------
+# Routing tree
+# -----------------------------------------------------------
+route:
+  receiver: "default-receiver"
+  group_by: ["alertname", "server", "env"]
+  group_wait: 10s
+  group_interval: 5m
+  repeat_interval: 4h
+
+  routes:
+    # Critical alerts → immediate notification
+    - match:
+        severity: critical
+      receiver: "critical-receiver"
+      group_wait: 0s
+      repeat_interval: 1h
+
+    # Production environment warning (critical sudah ditangani route di atas)
+    - match_re:
+        env: "production"
+        severity: "warning"
+      receiver: "prod-receiver"
+      group_wait: 0s
+      group_interval: 15m
+      repeat_interval: 8h
+
+    # Mail server alerts
+    - match:
+        role: mail
+      receiver: "mail-receiver"
+      group_wait: 0s
+      repeat_interval: 1h
+
+    # Elasticsearch alerts
+    - match:
+        role: elasticsearch
+      receiver: "elastic-receiver"
+      repeat_interval: 2h
+
+    # Gitea/SCM server alerts
+    - match:
+        role: gitea
+      receiver: "gitea-receiver"
+      group_wait: 0s
+      repeat_interval: 4h
+
+    # Development → less urgent
+    - match:
+        env: development
+      receiver: "dev-receiver"
+      group_wait: 1m
+      repeat_interval: 8h
+
+    # Info severity → tidak perlu notif urgent
+    - match:
+        severity: info
+      receiver: "info-receiver"
+      group_wait: 5m
+      repeat_interval: 24h
+
+# -----------------------------------------------------------
+# Inhibit rules (hindari duplikasi alert)
+# -----------------------------------------------------------
+inhibit_rules:
+  # Jika instance down, jangan kirim alert lain dari instance tsb
+  - source_match:
+      alertname: "InstanceDown"
+    target_match_re:
+      alertname: "HighCPUUsage|HighMemoryUsage|ContainerDown|PM2ProcessStopped"
+    equal: ["server"]
+
+  # Jika critical, suppress warning dari server yang sama
+  - source_match:
+      severity: "critical"
+    target_match:
+      severity: "warning"
+    equal: ["alertname", "server"]
+
+  # Jika ES cluster RED, suppress YELLOW
+  - source_match:
+      alertname: "ElasticsearchClusterRed"
+    target_match:
+      alertname: "ElasticsearchClusterYellow"
+
+# -----------------------------------------------------------
+# Receivers
+# -----------------------------------------------------------
+receivers:
+
+  - name: "default-receiver"
+    email_configs:
+      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com, admin@sateknologi.id"
+        send_resolved: true
+        html: '{{ template "email.custom.html" . }}'
+        text: '{{ template "email.custom.text" . }}'
+        headers:
+          Subject: "[MONITORING] {{ .GroupLabels.alertname }} - {{ .GroupLabels.server }}"
+
+  - name: "critical-receiver"
+    email_configs:
+      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com, admin@sateknologi.id"
+        send_resolved: true
+        html: '{{ template "email.custom.html" . }}'
+        text: '{{ template "email.custom.text" . }}'
+        headers:
+          Subject: "[CRITICAL] {{ .GroupLabels.alertname }} - {{ .GroupLabels.server }}"
+    # Uncomment untuk integrasi Telegram:
+    # webhook_configs:
+    #   - url: "http://telegram-alertmanager:8080/alert"
+    #     send_resolved: true
+
+  - name: "prod-receiver"
+    email_configs:
+      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com, admin@sateknologi.id"
+        send_resolved: true
+        html: '{{ template "email.custom.html" . }}'
+        text: '{{ template "email.custom.text" . }}'
+        headers:
+          Subject: "[PROD ALERT] {{ .GroupLabels.alertname }} - {{ .GroupLabels.server }}"
+
+  - name: "mail-receiver"
+    email_configs:
+      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com, admin@sateknologi.id"
+        send_resolved: true
+        html: '{{ template "email.custom.html" . }}'
+        text: '{{ template "email.custom.text" . }}'
+        headers:
+          Subject: "[MAIL SERVER] {{ .GroupLabels.alertname }}"
+
+  - name: "elastic-receiver"
+    email_configs:
+      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com, admin@sateknologi.id"
+        send_resolved: true
+        html: '{{ template "email.custom.html" . }}'
+        text: '{{ template "email.custom.text" . }}'
+        headers:
+          Subject: "[ELASTICSEARCH] {{ .GroupLabels.alertname }}"
+
+  - name: "gitea-receiver"
+    email_configs:
+      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com, admin@sateknologi.id"
+        send_resolved: true
+        html: '{{ template "email.custom.html" . }}'
+        text: '{{ template "email.custom.text" . }}'
+        headers:
+          Subject: "[GITEA] {{ .GroupLabels.alertname }} - {{ .GroupLabels.server }}"
+
+  - name: "dev-receiver"
+    email_configs:
+      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com, admin@sateknologi.id"
+        send_resolved: true
+        html: '{{ template "email.custom.html" . }}'
+        text: '{{ template "email.custom.text" . }}'
+        headers:
+          Subject: "[DEV] {{ .GroupLabels.alertname }} - {{ .GroupLabels.server }}"
+
+  - name: "info-receiver"
+    email_configs:
+      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com, admin@sateknologi.id"
+        send_resolved: false
+        html: '{{ template "email.custom.html" . }}'
+        text: '{{ template "email.custom.text" . }}'
+        headers:
+          Subject: "[INFO] {{ .GroupLabels.alertname }} - {{ .GroupLabels.server }}"

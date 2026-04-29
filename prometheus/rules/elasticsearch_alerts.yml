@@ -1,0 +1,129 @@
+groups:
+
+  # ===========================================================
+  # Elasticsearch Alerts
+  # ===========================================================
+  - name: elasticsearch_alerts
+    interval: 30s
+    rules:
+
+      # ---------------------------------------------------------
+      # Cluster health
+      # ---------------------------------------------------------
+      - alert: ElasticsearchClusterRed
+        expr: elasticsearch_cluster_health_status{color="red"} == 1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Elasticsearch cluster STATUS RED"
+          description: "Elasticsearch cluster di {{ $labels.server }} berstatus RED – data tidak dapat diakses!"
+
+      - alert: ElasticsearchClusterYellow
+        expr: elasticsearch_cluster_health_status{color="yellow"} == 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Elasticsearch cluster STATUS YELLOW"
+          description: "Elasticsearch cluster di {{ $labels.server }} berstatus YELLOW – replica shards tidak teralokasi."
+
+      # ---------------------------------------------------------
+      # Node count
+      # ---------------------------------------------------------
+      - alert: ElasticsearchNodesMissing
+        expr: elasticsearch_cluster_health_number_of_nodes < 1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Node Elasticsearch hilang di {{ $labels.server }}"
+          description: "Jumlah node: {{ $value }}."
+
+      # ---------------------------------------------------------
+      # JVM heap
+      # ---------------------------------------------------------
+      - alert: ElasticsearchJVMHeapHigh
+        expr: |
+          elasticsearch_jvm_memory_used_bytes{area="heap"} /
+          elasticsearch_jvm_memory_max_bytes{area="heap"} * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "JVM Heap Elasticsearch tinggi di {{ $labels.server }}"
+          description: "JVM heap usage: {{ $value | printf \"%.1f\" }}%."
+
+      - alert: ElasticsearchJVMHeapCritical
+        expr: |
+          elasticsearch_jvm_memory_used_bytes{area="heap"} /
+          elasticsearch_jvm_memory_max_bytes{area="heap"} * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "JVM Heap Elasticsearch KRITIS di {{ $labels.server }}"
+          description: "JVM heap usage: {{ $value | printf \"%.1f\" }}% – risiko OutOfMemoryError!"
+
+      # ---------------------------------------------------------
+      # Disk watermark
+      # ---------------------------------------------------------
+      - alert: ElasticsearchDiskWatermarkLow
+        expr: |
+          (1 - elasticsearch_filesystem_data_available_bytes /
+            elasticsearch_filesystem_data_size_bytes) * 100 > 75
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Elasticsearch disk usage 75%+ di {{ $labels.server }}"
+          description: "Disk ES terpakai {{ $value | printf \"%.1f\" }}% – mendekati low watermark."
+
+      - alert: ElasticsearchDiskWatermarkHigh
+        expr: |
+          (1 - elasticsearch_filesystem_data_available_bytes /
+            elasticsearch_filesystem_data_size_bytes) * 100 > 90
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Elasticsearch disk KRITIS di {{ $labels.server }}"
+          description: "Disk ES terpakai {{ $value | printf \"%.1f\" }}% – high watermark, indexing dihentikan!"
+
+      # ---------------------------------------------------------
+      # Query latency
+      # ---------------------------------------------------------
+      - alert: ElasticsearchSlowQueries
+        expr: |
+          rate(elasticsearch_indices_search_fetch_time_seconds[5m]) /
+          rate(elasticsearch_indices_search_fetch_total[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Query Elasticsearch lambat di {{ $labels.server }}"
+          description: "Rata-rata query fetch time > 1 detik."
+
+      # ---------------------------------------------------------
+      # Unassigned shards
+      # ---------------------------------------------------------
+      - alert: ElasticsearchUnassignedShards
+        expr: elasticsearch_cluster_health_unassigned_shards > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Ada unassigned shards di Elasticsearch {{ $labels.server }}"
+          description: "Jumlah unassigned shards: {{ $value }}."
+
+      # ---------------------------------------------------------
+      # Exporter down
+      # ---------------------------------------------------------
+      - alert: ElasticsearchExporterDown
+        expr: up{job=~"elasticsearch.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Elasticsearch exporter DOWN di {{ $labels.server }}"
+          description: "Tidak bisa mendapatkan metrics Elasticsearch."

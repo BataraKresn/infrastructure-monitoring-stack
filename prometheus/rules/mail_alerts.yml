@@ -1,0 +1,71 @@
+groups:
+
+  # ===========================================================
+  # Mail Server Alerts (Postfix + Blackbox)
+  # ===========================================================
+  - name: mail_alerts
+    interval: 30s
+    rules:
+
+      # ---------------------------------------------------------
+      # SMTP port not reachable
+      # ---------------------------------------------------------
+      - alert: SMTPDown
+        expr: probe_success{job="blackbox-smtp"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "SMTP di {{ $labels.instance }} TIDAK DAPAT DIAKSES"
+          description: "Probe SMTP ke {{ $labels.instance }} gagal selama 2 menit."
+
+      - alert: IMAPSDown
+        expr: probe_success{job="blackbox-tcp", instance=~".*:993"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "IMAPS (993) di {{ $labels.instance }} TIDAK DAPAT DIAKSES"
+
+      # ---------------------------------------------------------
+      # Postfix queue
+      # ---------------------------------------------------------
+      - alert: PostfixQueueHigh
+        expr: postfix_showq_message_age_seconds_count > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Postfix queue tinggi di {{ $labels.server }}"
+          description: "Ada {{ $value }} pesan di queue. Kemungkinan terjadi masalah pengiriman."
+
+      - alert: PostfixQueueCritical
+        expr: postfix_showq_message_age_seconds_count > 500
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Postfix queue KRITIS di {{ $labels.server }}"
+          description: "Ada {{ $value }} pesan di queue!"
+
+      - alert: PostfixOldMessages
+        expr: |
+          max(postfix_showq_message_age_seconds_sum / postfix_showq_message_age_seconds_count) > 3600
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Ada email stuck lama di queue Postfix {{ $labels.server }}"
+          description: "Rata-rata umur pesan > 1 jam, kemungkinan ada masalah delivery."
+
+      # ---------------------------------------------------------
+      # Mail probe latency
+      # ---------------------------------------------------------
+      - alert: SMTPSlowResponse
+        expr: probe_duration_seconds{job="blackbox-smtp"} > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "SMTP response lambat di {{ $labels.instance }}"
+          description: "SMTP response time: {{ $value | printf \"%.2f\" }}s."

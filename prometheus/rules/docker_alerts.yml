@@ -1,0 +1,104 @@
+groups:
+
+  # ===========================================================
+  # Docker / cAdvisor Alerts
+  # ===========================================================
+  - name: docker_alerts
+    interval: 30s
+    rules:
+
+      # ---------------------------------------------------------
+      # Container down
+      # ---------------------------------------------------------
+      - alert: ContainerDown
+        expr: |
+          time() - container_last_seen{name!=""} > 60
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Container {{ $labels.name }} di {{ $labels.server }} MATI"
+          description: "Container {{ $labels.name }} tidak terdeteksi selama lebih dari 1 menit."
+
+      # ---------------------------------------------------------
+      # Container CPU
+      # ---------------------------------------------------------
+      - alert: ContainerHighCPU
+        expr: |
+          (rate(container_cpu_usage_seconds_total{name!="",name!~"/system.slice.*"}[5m]) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU container {{ $labels.name }} tinggi di {{ $labels.server }}"
+          description: "CPU container {{ $labels.name }}: {{ $value | printf \"%.1f\" }}%."
+
+      # ---------------------------------------------------------
+      # Container Memory
+      # ---------------------------------------------------------
+      - alert: ContainerHighMemory
+        expr: |
+          (
+            (container_memory_working_set_bytes{name!="",name!~"/system.slice.*"} /
+              container_spec_memory_limit_bytes{name!="",name!~"/system.slice.*"} * 100) > 85
+          )
+          and on (instance, name)
+          (container_spec_memory_limit_bytes{name!="",name!~"/system.slice.*"} > 0)
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Memory container {{ $labels.name }} tinggi di {{ $labels.server }}"
+          description: "Memory container {{ $labels.name }}: {{ $value | printf \"%.1f\" }}% dari limit."
+
+      - alert: ContainerMemoryNoLimit
+        expr: |
+          (container_memory_working_set_bytes{name!="",name!~"/system.slice.*"} / 1024 / 1024 > 2048)
+          unless
+          on (instance, name)
+          (container_spec_memory_limit_bytes{name!="",name!~"/system.slice.*"} > 0)
+        for: 15m
+        labels:
+          severity: info
+        annotations:
+          summary: "Container {{ $labels.name }} memakai >2GB RAM tanpa memory limit"
+          description: "Container {{ $labels.name }} di {{ $labels.server }} memakai {{ $value | printf \"%.0f\" }} MB RAM tanpa limit."
+
+      # ---------------------------------------------------------
+      # Container restart loop
+      # ---------------------------------------------------------
+      - alert: ContainerRestartLoop
+        expr: |
+          increase(container_start_time_seconds{name!=""}[15m]) > 3
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Container {{ $labels.name }} restart loop di {{ $labels.server }}"
+          description: "Container {{ $labels.name }} sudah restart {{ $value | printf \"%.0f\" }} kali dalam 15 menit terakhir."
+
+      # ---------------------------------------------------------
+      # Container OOM killed
+      # ---------------------------------------------------------
+      - alert: ContainerOOMKilled
+        expr: |
+          kube_pod_container_status_last_terminated_reason{reason="OOMKilled"} == 1
+          OR
+          container_oom_events_total > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Container {{ $labels.name }} di {{ $labels.server }} di-OOMKill"
+
+      # ---------------------------------------------------------
+      # Docker daemon not reachable
+      # ---------------------------------------------------------
+      - alert: DockerDaemonDown
+        expr: |
+          absent(container_last_seen{name="/"})
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Docker daemon tidak berjalan di {{ $labels.server }}"

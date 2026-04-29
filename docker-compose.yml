@@ -1,0 +1,143 @@
+# =============================================================
+# Monitoring Stack: Prometheus + Grafana + Alertmanager
+# Run this on your dedicated monitoring server
+# =============================================================
+
+networks:
+  monitoring:
+    driver: bridge
+
+services:
+
+  # -----------------------------------------------------------
+  # Prometheus - Metrics collection & storage
+  # -----------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:v2.51.2
+    container_name: prometheus
+    restart: unless-stopped
+    user: "65534:65534"
+    environment:
+      - PROMETHEUS_BASIC_AUTH_USER=${PROMETHEUS_BASIC_AUTH_USER}
+      - PROMETHEUS_BASIC_AUTH_PASSWORD=${PROMETHEUS_BASIC_AUTH_PASSWORD}
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
+      - "--storage.tsdb.retention.size=10GB"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--web.enable-lifecycle"
+      - "--web.enable-admin-api"
+      - "--web.config.file=/etc/prometheus/web.yml"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/web.yml:/etc/prometheus/web.yml:ro
+      - ./prometheus/rules:/etc/prometheus/rules:ro
+      - /data/prometheus:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring
+    healthcheck:
+      test: ["CMD-SHELL", "AUTH=$$(printf '%s:%s' \"$$PROMETHEUS_BASIC_AUTH_USER\" \"$$PROMETHEUS_BASIC_AUTH_PASSWORD\" | base64 | tr -d '\n'); wget --header=\"Authorization: Basic $$AUTH\" --no-verbose --tries=1 --spider http://localhost:9090/-/healthy || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # -----------------------------------------------------------
+  # Alertmanager - Alert routing & notifications
+  # -----------------------------------------------------------
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: alertmanager
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+      - "--web.external-url=https://${GRAFANA_DOMAIN:-localhost}"
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./alertmanager/templates:/etc/alertmanager/templates:ro
+      - /data/alertmanager:/alertmanager
+    ports:
+      - "9093:9093"
+    extra_hosts:
+      - "mail.sateknologi.id:30.30.30.156"
+    networks:
+      - monitoring
+
+  # -----------------------------------------------------------
+  # Grafana - Visualization & dashboards
+  # -----------------------------------------------------------
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-StrongPassword123!}
+      - PROMETHEUS_BASIC_AUTH_USER=${PROMETHEUS_BASIC_AUTH_USER}
+      - PROMETHEUS_BASIC_AUTH_PASSWORD=${PROMETHEUS_BASIC_AUTH_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_DOMAIN=${GRAFANA_DOMAIN:-localhost}
+      - GF_SERVER_ROOT_URL=https://${GRAFANA_DOMAIN:-localhost}
+      - GF_SMTP_ENABLED=${SMTP_ENABLED:-false}
+      - GF_SMTP_HOST=${SMTP_HOST:-localhost}:${SMTP_PORT:-25}
+      - GF_SMTP_USER=${SMTP_USER:-}
+      - GF_SMTP_PASSWORD=${SMTP_PASS:-}
+      - GF_SMTP_SKIP_VERIFY=${SMTP_SKIP_VERIFY:-false}
+      - GF_SMTP_FROM_NAME=Grafana Alerts
+      - GF_SMTP_STARTTLS_POLICY=${SMTP_STARTTLS_POLICY:-OpportunisticStartTLS}
+      - GF_SMTP_EHLO_IDENTITY=${SMTP_TLS_SERVERNAME:-localhost}
+      - GF_SMTP_FROM_ADDRESS=${SMTP_FROM:-grafana@yourcompany.com}
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel
+    volumes:
+      - /data/grafana:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "${GRAFANA_PORT:-3300}:3000"
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # -----------------------------------------------------------
+  # Blackbox Exporter - Probe HTTP/SMTP/TCP endpoints
+  # -----------------------------------------------------------
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.25.0
+    container_name: blackbox-exporter
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/blackbox/blackbox.yml"
+    volumes:
+      - ./blackbox/blackbox.yml:/etc/blackbox/blackbox.yml:ro
+    ports:
+      - "9115:9115"
+    networks:
+      - monitoring
+
+  # -----------------------------------------------------------
+  # Node Exporter (monitoring server itself)
+  # -----------------------------------------------------------
+  node-exporter:
+    image: prom/node-exporter:v1.8.0
+    container_name: node-exporter-local
+    restart: unless-stopped
+    pid: "host"
+    command:
+      - "--path.rootfs=/host"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+    volumes:
+      - /:/host:ro,rslave
+    ports:
+      - "9100:9100"
+    networks:
+      - monitoring

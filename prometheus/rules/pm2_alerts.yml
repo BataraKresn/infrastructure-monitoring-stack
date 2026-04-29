@@ -1,0 +1,65 @@
+groups:
+
+  # ===========================================================
+  # PM2 Process Alerts
+  # ===========================================================
+  - name: pm2_alerts
+    interval: 30s
+    rules:
+
+      # ---------------------------------------------------------
+      # PM2 process stopped
+      # ---------------------------------------------------------
+      - alert: PM2ProcessStopped
+        expr: pm2_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PM2 process '{{ $labels.name }}' MATI di {{ $labels.server }}"
+          description: "PM2 process {{ $labels.name }} (id: {{ $labels.id }}) di {{ $labels.server }} tidak berjalan."
+
+      # ---------------------------------------------------------
+      # PM2 process restart
+      # ---------------------------------------------------------
+      - alert: PM2ProcessRestarting
+        expr: increase(pm2_restart_count[15m]) > 3
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PM2 process '{{ $labels.name }}' sering restart di {{ $labels.server }}"
+          description: "PM2 process {{ $labels.name }} sudah restart {{ $value | printf \"%.0f\" }} kali dalam 15 menit."
+
+      - alert: PM2ProcessRestartCritical
+        expr: increase(pm2_restart_count[5m]) > 5
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PM2 process '{{ $labels.name }}' restart loop di {{ $labels.server }}"
+          description: "PM2 process {{ $labels.name }} restart {{ $value | printf \"%.0f\" }} kali dalam 5 menit!"
+
+      # ---------------------------------------------------------
+      # PM2 memory
+      # ---------------------------------------------------------
+      - alert: PM2HighMemory
+        expr: pm2_memory_bytes / 1024 / 1024 > 512
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PM2 process '{{ $labels.name }}' memakai banyak memory di {{ $labels.server }}"
+          description: "Memory usage: {{ $value | printf \"%.0f\" }} MB."
+
+      # ---------------------------------------------------------
+      # PM2 CPU
+      # ---------------------------------------------------------
+      - alert: PM2HighCPU
+        expr: pm2_cpu_percent > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PM2 process '{{ $labels.name }}' CPU tinggi di {{ $labels.server }}"
+          description: "CPU usage: {{ $value | printf \"%.1f\" }}%."

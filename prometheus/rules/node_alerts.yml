@@ -1,0 +1,155 @@
+groups:
+
+  # ===========================================================
+  # Node / System Alerts
+  # ===========================================================
+  - name: node_alerts
+    interval: 30s
+    rules:
+
+      # ---------------------------------------------------------
+      # Instance down
+      # ---------------------------------------------------------
+      - alert: InstanceDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Instance {{ $labels.instance }} is DOWN"
+          description: "{{ $labels.job }} pada server {{ $labels.server }} sudah tidak bisa dijangkau selama lebih dari 2 menit."
+
+      # ---------------------------------------------------------
+      # CPU
+      # ---------------------------------------------------------
+      - alert: HighCPUUsage
+        expr: |
+          100 - (avg by(instance, server, env) (
+            rate(node_cpu_seconds_total{mode="idle"}[5m])
+          ) * 100) > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU tinggi di {{ $labels.server }}"
+          description: "CPU usage {{ $labels.server }} mencapai {{ $value | printf \"%.1f\" }}% selama 5 menit."
+
+      - alert: CriticalCPUUsage
+        expr: |
+          100 - (avg by(instance, server, env) (
+            rate(node_cpu_seconds_total{mode="idle"}[5m])
+          ) * 100) > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "CPU KRITIS di {{ $labels.server }}"
+          description: "CPU usage {{ $labels.server }} mencapai {{ $value | printf \"%.1f\" }}%!"
+
+      # ---------------------------------------------------------
+      # Memory
+      # ---------------------------------------------------------
+      - alert: HighMemoryUsage
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Memory tinggi di {{ $labels.server }}"
+          description: "Memory usage {{ $labels.server }} mencapai {{ $value | printf \"%.1f\" }}%."
+
+      - alert: CriticalMemoryUsage
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Memory KRITIS di {{ $labels.server }}"
+          description: "Memory usage {{ $labels.server }} mencapai {{ $value | printf \"%.1f\" }}%!"
+
+      # ---------------------------------------------------------
+      # Disk
+      # ---------------------------------------------------------
+      - alert: DiskSpaceWarning
+        expr: |
+          (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs"} /
+            node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs"})) * 100 > 75
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk {{ $labels.mountpoint }} di {{ $labels.server }} mulai penuh"
+          description: "Disk {{ $labels.mountpoint }} terpakai {{ $value | printf \"%.1f\" }}%."
+
+      - alert: DiskSpaceCritical
+        expr: |
+          (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs"} /
+            node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs"})) * 100 > 90
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Disk KRITIS di {{ $labels.server }}"
+          description: "Disk {{ $labels.mountpoint }} terpakai {{ $value | printf \"%.1f\" }}%!"
+
+      - alert: DiskWillFillIn4Hours
+        expr: |
+          predict_linear(node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs"}[1h], 4 * 3600) < 0
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk {{ $labels.mountpoint }} di {{ $labels.server }} akan penuh dalam 4 jam"
+
+      # ---------------------------------------------------------
+      # Disk I/O
+      # ---------------------------------------------------------
+      - alert: HighDiskIOWait
+        expr: |
+          rate(node_cpu_seconds_total{mode="iowait"}[5m]) * 100 > 20
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk I/O wait tinggi di {{ $labels.server }}"
+          description: "IOWait mencapai {{ $value | printf \"%.1f\" }}% di {{ $labels.server }}."
+
+      # ---------------------------------------------------------
+      # Network
+      # ---------------------------------------------------------
+      - alert: HighNetworkReceive
+        expr: |
+          rate(node_network_receive_bytes_total{device!~"lo|docker.*|veth.*|br.*"}[5m]) / 1024 / 1024 > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Traffic jaringan tinggi di {{ $labels.server }}"
+          description: "Receive {{ $labels.device }}: {{ $value | printf \"%.1f\" }} MB/s."
+
+      # ---------------------------------------------------------
+      # Load Average
+      # ---------------------------------------------------------
+      - alert: HighLoadAverage
+        expr: |
+          node_load1 / count without(cpu, mode)(node_cpu_seconds_total{mode="idle"}) > 1.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Load average tinggi di {{ $labels.server }}"
+          description: "Load average 1m: {{ $value | printf \"%.2f\" }} di {{ $labels.server }}."
+
+      # ---------------------------------------------------------
+      # System reboot
+      # ---------------------------------------------------------
+      - alert: SystemReboot
+        expr: node_boot_time_seconds > (time() - 300)
+        for: 0m
+        labels:
+          severity: info
+        annotations:
+          summary: "Server {{ $labels.server }} baru saja reboot"
+          description: "Server {{ $labels.server }} melakukan reboot dalam 5 menit terakhir."

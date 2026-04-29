@@ -1,0 +1,50 @@
+{{ define "email.custom.text" }}
+[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}
+Receiver: {{ .Receiver }}
+Environment: {{ .CommonLabels.env }}
+Total alerts: {{ len .Alerts }}
+{{ $publicURL := "https://grafana-sat.sateknologi.id" }}
+
+{{ range .Alerts }}
+- Alert: {{ .Labels.alertname }}
+  Status: {{ .Status }}
+  Severity: {{ .Labels.severity }}
+  Server: {{ .Labels.server }}
+  Summary: {{ if .Annotations.summary }}{{ .Annotations.summary }}{{ else }}(no summary){{ end }}
+  Description: {{ if .Annotations.description }}{{ .Annotations.description }}{{ else }}(no description){{ end }}
+  Alerting: {{ $publicURL }}/alerting/list
+{{ end }}
+
+Login & Alerting: {{ $publicURL }}/alerting/list
+{{ end }}
+
+{{ define "email.custom.html" }}
+<!DOCTYPE html>
+<html>
+  <body style="font-family:Arial,Helvetica,sans-serif;background:#f6f8fb;padding:16px;color:#0f172a;">
+    {{ $publicURL := "https://grafana-sat.sateknologi.id" }}
+    <div style="max-width:760px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;">
+      <h2 style="margin:0 0 8px 0;">🚨 [{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}</h2>
+      <p style="margin:0 0 12px 0;color:#475569;">
+        Receiver: <strong>{{ .Receiver }}</strong> • Env: <strong>{{ .CommonLabels.env }}</strong> • Alerts: <strong>{{ len .Alerts }}</strong>
+      </p>
+
+      {{ range .Alerts }}
+      <div style="border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:12px;">
+        <div style="font-size:16px;font-weight:700;margin-bottom:8px;">{{ .Labels.alertname }} ({{ .Status }})</div>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <tr><td style="padding:4px 0;color:#64748b;width:160px;">Severity</td><td>{{ .Labels.severity }}</td></tr>
+          <tr><td style="padding:4px 0;color:#64748b;">Server</td><td>{{ .Labels.server }}</td></tr>
+          <tr><td style="padding:4px 0;color:#64748b;">Summary</td><td>{{ if .Annotations.summary }}{{ .Annotations.summary }}{{ else }}(no summary){{ end }}</td></tr>
+          <tr><td style="padding:4px 0;color:#64748b;">Description</td><td>{{ if .Annotations.description }}{{ .Annotations.description }}{{ else }}(no description){{ end }}</td></tr>
+        </table>
+
+        <div style="margin-top:10px;">
+          <a href="{{ $publicURL }}/alerting/list" style="display:inline-block;padding:8px 12px;background:#2563eb;color:#fff;text-decoration:none;border-radius:8px;">Buka Alerting</a>
+        </div>
+      </div>
+      {{ end }}
+    </div>
+  </body>
+</html>
+{{ end }}

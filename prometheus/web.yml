@@ -1,0 +1,4 @@
+# Prometheus web authentication
+# HTTP Basic Auth will trigger a browser username/password popup.
+basic_auth_users:
+  promadmin: "$2b$12$Gl4Zev3zW3wOMbmtDfXuxu1NGpNVLdifOHUeIz2R1V5UXeOIRdNtG"

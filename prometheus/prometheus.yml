@@ -1,0 +1,280 @@
+# =============================================================
+# Prometheus Main Configuration
+# Last updated: 2026-04-23
+# =============================================================
+
+global:
+  scrape_interval: 15s          # Default scrape interval
+  evaluation_interval: 15s      # Evaluate rules every 15s
+  scrape_timeout: 10s
+  external_labels:
+    monitor: "monitoring-stack"
+    environment: "mixed"
+
+# -----------------------------------------------------------
+# Alerting
+# -----------------------------------------------------------
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+# -----------------------------------------------------------
+# Rule files
+# -----------------------------------------------------------
+rule_files:
+  - "rules/node_alerts.yml"
+  - "rules/docker_alerts.yml"
+  - "rules/elasticsearch_alerts.yml"
+  - "rules/mail_alerts.yml"
+  - "rules/pm2_alerts.yml"
+  - "rules/jenkins_alerts.yml"
+
+# -----------------------------------------------------------
+# Scrape configurations
+# -----------------------------------------------------------
+scrape_configs:
+
+  # ----------------------------------------------------------
+  # Prometheus self-monitoring
+  # ----------------------------------------------------------
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+    relabel_configs:
+      - target_label: instance
+        replacement: "monitoring-server"
+
+  # ----------------------------------------------------------
+  # Blackbox Exporter
+  # ----------------------------------------------------------
+  - job_name: "blackbox"
+    static_configs:
+      - targets: ["blackbox-exporter:9115"]
+
+  # ----------------------------------------------------------
+  # Jenkins Metrics
+  # ----------------------------------------------------------
+  - job_name: "jenkins"
+    scheme: https
+    metrics_path: /prometheus/
+    static_configs:
+      - targets: ["jenkins.mugshot.dev"]
+        labels:
+          env: "production"
+          server: "jenkins-mugshot"
+          role: "cicd"
+
+  # ----------------------------------------------------------
+  # Gitea Metrics
+  # ----------------------------------------------------------
+  - job_name: "gitea"
+    metrics_path: /metrics
+    scheme: http
+    authorization:
+      type: Bearer
+      credentials: "818d54979c0b54b4ca30a49e2280beab2889868fd9bd6600fe3338e230c588f0"
+    static_configs:
+      - targets: ["30.30.30.123:80"]
+        labels:
+          env: "production"
+          server: "gitea"
+          role: "gitea"
+
+  # ----------------------------------------------------------
+  # [DEV] dev-sat-baremetal
+  # Node Exporter, cAdvisor, PM2
+  # ----------------------------------------------------------
+  - job_name: "node-dev-sat-baremetal"
+    static_configs:
+      - targets: ["100.101.33.66:8193"]     # dev-sat-baremetal (Tailscale)
+        labels:
+          env: "development"
+          server: "dev-sat-baremetal"
+          role: "baremetal"
+
+  - job_name: "cadvisor-dev-sat-baremetal"
+    static_configs:
+      - targets: ["100.101.33.66:8192"]     # dev-sat-baremetal (Tailscale)
+        labels:
+          env: "development"
+          server: "dev-sat-baremetal"
+          role: "baremetal"
+
+  # ----------------------------------------------------------
+  # [PROD] server-be-gotham
+  # Node Exporter, cAdvisor, PM2
+  # ----------------------------------------------------------
+  - job_name: "node-server-be-gotham"
+    static_configs:
+      - targets: ["100.92.210.98:8193"]      # server-be-gotham (Tailscale)
+        labels:
+          env: "production"
+          server: "server-be-gotham"
+          role: "backend"
+
+  - job_name: "cadvisor-server-be-gotham"
+    static_configs:
+      - targets: ["100.92.210.98:8192"]      # server-be-gotham (Tailscale)
+        labels:
+          env: "production"
+          server: "server-be-gotham"
+          role: "backend"
+
+  # ----------------------------------------------------------
+  # [PROD] be-leaked-gotham
+  # Node Exporter, cAdvisor, PM2
+  # ----------------------------------------------------------
+  - job_name: "node-be-leaked-gotham"
+    static_configs:
+      - targets: ["100.105.46.41:9100"]      # be-leaked-gotham (Tailscale)
+        labels:
+          env: "production"
+          server: "be-leaked-gotham"
+          role: "backend"
+
+  - job_name: "cadvisor-be-leaked-gotham"
+    static_configs:
+      - targets: ["100.105.46.41:8080"]      # be-leaked-gotham (Tailscale)
+        labels:
+          env: "production"
+          server: "be-leaked-gotham"
+          role: "backend"
+
+  # ----------------------------------------------------------
+  # [PROD] baremetal-ubuntu
+  # Node Exporter, cAdvisor, PM2
+  # ----------------------------------------------------------
+  - job_name: "node-baremetal-ubuntu"
+    static_configs:
+      - targets: ["100.92.125.27:8193"]      # baremetal-ubuntu (Tailscale)
+        labels:
+          env: "production"
+          server: "baremetal-ubuntu"
+          role: "baremetal"
+
+  - job_name: "cadvisor-baremetal-ubuntu"
+    static_configs:
+      - targets: ["100.92.125.27:8192"]      # baremetal-ubuntu (Tailscale)
+        labels:
+          env: "production"
+          server: "baremetal-ubuntu"
+          role: "baremetal"
+
+  # ----------------------------------------------------------
+  # [MAIL] mail-svr
+  # Node Exporter + cAdvisor (mailcow services in Docker)
+  # ----------------------------------------------------------
+  - job_name: "node-mail-svr"
+    static_configs:
+      - targets: ["30.30.30.156:8193"]       # mail-svr
+        labels:
+          env: "production"
+          server: "mail-svr"
+          role: "mail"
+
+  - job_name: "cadvisor-mail-svr"
+    static_configs:
+      - targets: ["30.30.30.156:8192"]       # mail-svr
+        labels:
+          env: "production"
+          server: "mail-svr"
+          role: "mail"
+
+  # ----------------------------------------------------------
+  # [PROD] gitrepo-sat
+  # Node Exporter, cAdvisor
+  # ----------------------------------------------------------
+  - job_name: "node-prod-gitrepo-sat"
+    static_configs:
+      - targets: ["100.82.173.101:9100"]     # gitrepo-sat (Tailscale)
+        labels:
+          env: "production"
+          server: "gitrepo-sat"
+          role: "gitea"
+
+  - job_name: "cadvisor-prod-gitrepo-sat"
+    static_configs:
+      - targets: ["100.82.173.101:8080"]     # gitrepo-sat (Tailscale)
+        labels:
+          env: "production"
+          server: "gitrepo-sat"
+          role: "gitea"
+
+  # ----------------------------------------------------------
+  # Elasticsearch Exporter (be-leaked-gotham)
+  # Sesuaikan target jika ES dipindah ke server lain
+  # ----------------------------------------------------------
+  - job_name: "elasticsearch"
+    static_configs:
+      - targets: ["100.105.46.41:9114"]      # be-leaked-gotham (Tailscale)
+        labels:
+          env: "production"
+          server: "be-leaked-gotham"
+          role: "elasticsearch"
+
+  # ----------------------------------------------------------
+  # HTTP Probes via Blackbox Exporter
+  # Monitoring endpoint availability
+  # ----------------------------------------------------------
+  - job_name: "blackbox-http"
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+          - http://100.92.210.98           # server-be-gotham (Tailscale)
+          - http://100.105.46.41           # be-leaked-gotham (Tailscale)
+        labels:
+          probe_type: "http"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # ----------------------------------------------------------
+  # SMTP Probe via Blackbox Exporter
+  # ----------------------------------------------------------
+  - job_name: "blackbox-smtp"
+    metrics_path: /probe
+    params:
+      module: [smtp_starttls]
+    static_configs:
+      - targets:
+          - 30.30.30.156:25                # mail-svr SMTP
+          - 30.30.30.156:587               # mail-svr Submission
+        labels:
+          probe_type: "smtp"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # ----------------------------------------------------------
+  # TCP Probe - Check port availability
+  # ----------------------------------------------------------
+  - job_name: "blackbox-tcp"
+    metrics_path: /probe
+    params:
+      module: [tcp_connect]
+    static_configs:
+      - targets:
+          - 30.30.30.156:993               # mail-svr IMAPS
+          - 30.30.30.156:465               # mail-svr SMTPS
+          - 100.105.46.41:9200             # be-leaked-gotham ES (Tailscale)
+        labels:
+          probe_type: "tcp"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
