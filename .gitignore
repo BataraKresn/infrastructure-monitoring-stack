@@ -1,0 +1,43 @@
+# =========================
+# Secrets / environment
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# OS / editor
+# =========================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.tmp
+*~
+.vscode/
+.idea/
+
+# =========================
+# Logs & runtime
+# =========================
+*.log
+logs/
+
+# =========================
+# Python / Node leftovers
+# =========================
+__pycache__/
+*.pyc
+node_modules/
+
+# =========================
+# Local data mounts (optional)
+# Keep repo clean from runtime data
+# =========================
+data/*
+!data/.gitkeep
+
+# If local host mounts are accidentally symlinked into repo
+prometheus-data/
+alertmanager-data/
+grafana-data/
