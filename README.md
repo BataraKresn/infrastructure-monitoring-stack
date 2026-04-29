@@ -106,8 +106,6 @@ flowchart LR
 
 - `docs/images/monitoring-topology.png`
 
-Link yang dipakai di README:
-
 ![Monitoring Topology](docs/images/monitoring-topology.png)
 
 ---
@@ -371,14 +369,3 @@ sudo ./scripts/install-agents.sh --with-postfix
 
 ---
 
-## Catatan Mermaid Export
-
-Source Mermaid tersedia di:
-
-- `docs/topology.mmd`
-
-Output image target:
-
-- `docs/images/monitoring-topology.png`
-
-Setelah Anda export PNG, README ini langsung menampilkan image tersebut.
