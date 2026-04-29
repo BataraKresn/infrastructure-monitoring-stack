@@ -1,21 +1,29 @@
 # Monitoring Stack (Prometheus + Grafana + Alertmanager)
 
-Stack monitoring terpusat untuk infrastruktur campuran (development + production) dengan komponen:
+Repository ini berisi konfigurasi **monitoring terpusat** untuk lingkungan **development** dan **production** berbasis Docker Compose.
 
-- **Prometheus**: koleksi metrics + alert rules
-- **Alertmanager**: routing dan notifikasi email
-- **Grafana**: visualisasi dashboard + alerting UI
-- **Blackbox Exporter**: HTTP/SMTP/TCP probing
-- **Node Exporter / cAdvisor / PM2 / Elasticsearch / Postfix exporters** di host target
+Komponen utama:
 
-> Repository ini menggunakan Docker Compose untuk service utama monitoring server.
+- **Prometheus** untuk scraping metrics, rule evaluation, dan alert generation.
+- **Alertmanager** untuk routing notifikasi berdasarkan severity, environment, dan role.
+- **Grafana** untuk dashboard observability dan visualisasi metrik.
+- **Blackbox Exporter** untuk HTTP/SMTP/TCP probing.
+- **Exporter host/service**: Node Exporter, cAdvisor, PM2 Exporter, Elasticsearch Exporter, Postfix Exporter.
 
----
+> Dokumentasi ini dirancang sebagai referensi operasional harian (deploy, validasi, troubleshooting).
+
+## Quick Start
+
+```bash
+cd /home/devel/monitoring
+docker compose up -d
+docker compose ps
+```
 
 ## Daftar Isi
 
 - [Arsitektur Ringkas](#arsitektur-ringkas)
-- [Topologi (Mermaid + Image Link)](#topologi-mermaid--image-link)
+- [Topologi](#topologi)
 - [Struktur Repository](#struktur-repository)
 - [Konfigurasi Utama](#konfigurasi-utama)
 - [Daftar Job Scrape Prometheus](#daftar-job-scrape-prometheus)
@@ -26,8 +34,6 @@ Stack monitoring terpusat untuk infrastruktur campuran (development + production
 - [Operasional Harian](#operasional-harian)
 - [Security Notes (Penting)](#security-notes-penting)
 
----
-
 ## Arsitektur Ringkas
 
 - Monitoring server menjalankan 5 container utama: `prometheus`, `alertmanager`, `grafana`, `blackbox-exporter`, `node-exporter-local`.
@@ -36,38 +42,36 @@ Stack monitoring terpusat untuk infrastruktur campuran (development + production
 - Alertmanager route notifikasi berdasarkan severity/env/role (critical, prod warning, mail, elasticsearch, gitea, dev, info).
 - Grafana otomatis provision datasource + dashboard dari folder repository.
 
----
+## Topologi
 
-## Topologi (Mermaid + Image Link)
-
-### Mermaid code
+### Diagram Mermaid
 
 ```mermaid
 flowchart LR
-  subgraph MON[🧠 Monitoring Server]
-    P[📈 Prometheus\n:9090]
-    A[🚨 Alertmanager\n:9093]
-    G[📊 Grafana\n:3000]
-    B[🛰️ Blackbox Exporter\n:9115]
-    N0[🖥️ Node Exporter Local\n:9100]
+  subgraph MON[Monitoring Server]
+    P[Prometheus\n:9090]
+    A[Alertmanager\n:9093]
+    G[Grafana\n:3000]
+    B[Blackbox Exporter\n:9115]
+    N0[Node Exporter Local\n:9100]
 
     P --> A
     G --> P
     P --> B
   end
 
-  subgraph DEV[🧪 DEV]
-    D1[🖥️ dev-sat-baremetal\nnode:8193\ncadvisor:8192]
+  subgraph DEV[DEV]
+    D1[dev-sat-baremetal\nnode:8193\ncadvisor:8192]
   end
 
-  subgraph PROD[🏭 PRODUCTION]
-    S1[🖥️ server-be-gotham\nnode:8193\ncadvisor:8192]
-    S2[🖥️ be-leaked-gotham\nnode:9100\ncadvisor:8080\nelasticsearch:9114]
-    S3[🖥️ baremetal-ubuntu\nnode:8193\ncadvisor:8192]
-    S4[🗂️ gitrepo-sat\nnode:9100\ncadvisor:8080]
-    S5[🐙 gitea endpoint\n30.30.30.123:80 /metrics]
-    S6[🧱 jenkins.mugshot.dev\n/prometheus]
-    M1[✉️ mail-svr\nnode:8193\ncadvisor:8192\nSMTP/IMAPS probes]
+  subgraph PROD[PRODUCTION]
+    S1[server-be-gotham\nnode:8193\ncadvisor:8192]
+    S2[be-leaked-gotham\nnode:9100\ncadvisor:8080\nelasticsearch:9114]
+    S3[baremetal-ubuntu\nnode:8193\ncadvisor:8192]
+    S4[gitrepo-sat\nnode:9100\ncadvisor:8080]
+    S5[gitea endpoint\n30.30.30.123:80 /metrics]
+    S6[jenkins.mugshot.dev\n/prometheus]
+    M1[mail-svr\nnode:8193\ncadvisor:8192\nSMTP/IMAPS probes]
   end
 
   P --> D1
@@ -82,25 +86,15 @@ flowchart LR
   B --> S1
   B --> S2
   B --> M1
-
-  classDef monitor fill:#EAF3FF,stroke:#2563EB,stroke-width:2px,color:#0B1F44;
-  classDef dev fill:#ECFDF3,stroke:#059669,stroke-width:2px,color:#064E3B;
-  classDef prod fill:#FFF7ED,stroke:#EA580C,stroke-width:2px,color:#7C2D12;
-  classDef app fill:#F5F3FF,stroke:#7C3AED,stroke-width:2px,color:#4C1D95;
-  classDef mail fill:#FEF2F2,stroke:#DC2626,stroke-width:2px,color:#7F1D1D;
-
-  class P,A,G,B,N0 monitor;
-  class D1 dev;
-  class S1,S2,S3 prod;
-  class S4,S5,S6 app;
-  class M1 mail;
-
-  style MON fill:#DBEAFE,stroke:#1D4ED8,stroke-width:2px,color:#1E3A8A
-  style DEV fill:#DCFCE7,stroke:#16A34A,stroke-width:2px,color:#14532D
-  style PROD fill:#FFEDD5,stroke:#F97316,stroke-width:2px,color:#7C2D12
 ```
 
----
+### Export PNG
+
+Simpan hasil export diagram ke path berikut:
+
+- `docs/images/monitoring-topology.png`
+
+![Monitoring Topology](docs/images/monitoring-topology.png)
 
 ## Struktur Repository
 
