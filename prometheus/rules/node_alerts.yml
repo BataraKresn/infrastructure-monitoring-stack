@@ -11,7 +11,7 @@ groups:
       # Instance down
       # ---------------------------------------------------------
       - alert: InstanceDown
-        expr: up == 0
+        expr: up{job!="prometheus"} == 0
         for: 2m
         labels:
           severity: critical
@@ -74,8 +74,15 @@ groups:
       # ---------------------------------------------------------
       - alert: DiskSpaceWarning
         expr: |
-          (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs"} /
-            node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs"})) * 100 > 75
+          (
+            (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs",server="be-leaked-gotham"} /
+              node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs",server="be-leaked-gotham"})) * 100 > 95
+          )
+          or
+          (
+            (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs",server!="be-leaked-gotham"} /
+              node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs",server!="be-leaked-gotham"})) * 100 > 75
+          )
         for: 5m
         labels:
           severity: warning
@@ -85,8 +92,15 @@ groups:
 
       - alert: DiskSpaceCritical
         expr: |
-          (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs"} /
-            node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs"})) * 100 > 90
+          (
+            (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs",server="be-leaked-gotham"} /
+              node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs",server="be-leaked-gotham"})) * 100 > 98
+          )
+          or
+          (
+            (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs",server!="be-leaked-gotham"} /
+              node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs",server!="be-leaked-gotham"})) * 100 > 90
+          )
         for: 2m
         labels:
           severity: critical

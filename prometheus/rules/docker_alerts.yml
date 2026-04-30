@@ -12,7 +12,9 @@ groups:
       # ---------------------------------------------------------
       - alert: ContainerDown
         expr: |
-          time() - container_last_seen{name!=""} > 60
+          (time() - container_last_seen{name!=""} > 60)
+          and
+          (time() - container_last_seen{name!=""} < 900)
         for: 1m
         labels:
           severity: critical
@@ -96,9 +98,9 @@ groups:
       # ---------------------------------------------------------
       - alert: DockerDaemonDown
         expr: |
-          absent(container_last_seen{name="/"})
+          up{job=~"cadvisor.*"} == 0
         for: 2m
         labels:
           severity: critical
         annotations:
-          summary: "Docker daemon tidak berjalan di {{ $labels.server }}"
+          summary: "cAdvisor/Docker metrics tidak dapat di-scrape di {{ $labels.server }}"

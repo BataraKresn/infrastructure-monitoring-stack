@@ -102,6 +102,16 @@ scrape_configs:
           server: "dev-sat-baremetal"
           role: "baremetal"
 
+  - job_name: "pm2-dev-sat-baremetal"
+    metrics_path: /metrics
+    scheme: http
+    static_configs:
+      - targets: ["100.101.33.66:9988"]     # dev-sat-baremetal PM2 metrics (Tailscale)
+        labels:
+          env: "development"
+          server: "dev-sat-baremetal"
+          role: "baremetal"
+
   # ----------------------------------------------------------
   # [PROD] server-be-gotham
   # Node Exporter, cAdvisor, PM2
@@ -117,6 +127,16 @@ scrape_configs:
   - job_name: "cadvisor-server-be-gotham"
     static_configs:
       - targets: ["100.92.210.98:8192"]      # server-be-gotham (Tailscale)
+        labels:
+          env: "production"
+          server: "server-be-gotham"
+          role: "backend"
+
+  - job_name: "pm2-server-be-gotham"
+    metrics_path: /
+    scheme: http
+    static_configs:
+      - targets: ["100.92.210.98:9988"]      # server-be-gotham PM2 metrics (Tailscale)
         labels:
           env: "production"
           server: "server-be-gotham"
@@ -148,7 +168,7 @@ scrape_configs:
   # ----------------------------------------------------------
   - job_name: "node-baremetal-ubuntu"
     static_configs:
-      - targets: ["100.92.125.27:8193"]      # baremetal-ubuntu (Tailscale)
+      - targets: ["100.92.125.27:9101"]      # baremetal-ubuntu node_exporter (Tailscale)
         labels:
           env: "production"
           server: "baremetal-ubuntu"
@@ -156,7 +176,17 @@ scrape_configs:
 
   - job_name: "cadvisor-baremetal-ubuntu"
     static_configs:
-      - targets: ["100.92.125.27:8192"]      # baremetal-ubuntu (Tailscale)
+      - targets: ["100.92.125.27:8080"]      # baremetal-ubuntu cAdvisor (Tailscale)
+        labels:
+          env: "production"
+          server: "baremetal-ubuntu"
+          role: "baremetal"
+
+  - job_name: "pm2-baremetal-ubuntu"
+    metrics_path: /metrics
+    scheme: http
+    static_configs:
+      - targets: ["100.92.125.27:9988"]      # baremetal-ubuntu PM2 metrics (Tailscale)
         labels:
           env: "production"
           server: "baremetal-ubuntu"

@@ -584,6 +584,53 @@ pm2 restart pm2-prometheus-exporter
 pm2 logs pm2-prometheus-exporter
 ```
 
+### PM2 HTTP metrics (`pm2_http*`) tidak keluar (hanya HELP/TYPE)
+
+Gejala umum:
+- Di endpoint `/metrics`, terlihat `# HELP pm2_http...` dan `# TYPE pm2_http...`
+- Tapi tidak ada baris sample seperti `pm2_http{...} 12.3`
+
+#### Cek cepat dari monitoring server
+
+```bash
+cd /opt/monitoring
+./scripts/check-pm2-http-metrics.sh
+```
+
+Jika ingin cek target spesifik:
+
+```bash
+./scripts/check-pm2-http-metrics.sh 100.92.210.98:9988
+```
+
+#### Interpretasi hasil
+- Jika `pm2_http* sample exists = false` di semua target:
+  - Exporter hidup, tetapi telemetry HTTP dari app belum tersedia.
+- Jika `pm2_active_requests` / `pm2_active_handles` ada tapi `pm2_http*` kosong:
+  - PM2 runtime terbaca, masalah ada di instrumentasi HTTP app-level.
+
+#### Tindak lanjut di server aplikasi
+
+```bash
+pm2 list
+pm2 logs pm2-prometheus-exporter --lines 100
+curl -s http://localhost:<PORT_EXPORTER>/metrics | grep -E '^pm2_http\{|^pm2_http_mean_latency\{|^pm2_http_p95_latency\{'
+```
+
+Pastikan juga:
+- Aplikasi menerima trafik HTTP nyata pada window observasi.
+- Instrumentasi telemetry HTTP di aplikasi aktif (sesuai framework/service masing-masing).
+- Setelah perubahan, restart app PM2 dan verifikasi lagi `/metrics`.
+
+Template siap-tempel per stack tersedia di:
+
+- `docs/templates/pm2-http/express-pm2-http-metrics.ts`
+- `docs/templates/pm2-http/nest-pm2-http.interceptor.ts`
+- `docs/templates/pm2-http/fastify-pm2-http-metrics.ts`
+- Panduan singkat: `docs/templates/pm2-http/README.md`
+
+> Catatan NOC: dashboard unified sudah menampilkan badge **HTTP metric unavailable** saat nilai masih fallback.
+
 ### Grafana tidak bisa connect ke Prometheus
 
 ```bash

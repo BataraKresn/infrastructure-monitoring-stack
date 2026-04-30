@@ -1,0 +1,455 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "id": 100,
+      "type": "stat",
+      "title": "PM2 Targets UP",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(up{job=~\"$job\",server=~\"$server\"} == 1)",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "background", "graphMode": "none", "textMode": "value" },
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] } }, "overrides": [] }
+    },
+    {
+      "id": 101,
+      "type": "stat",
+      "title": "Apps Running",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(pm2_app_status{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"} == 1)",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+    },
+    {
+      "id": 102,
+      "type": "stat",
+      "title": "Apps Stopped/Errored",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(pm2_app_status{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"} > 1)",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "background", "graphMode": "none", "textMode": "value" },
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] } }, "overrides": [] }
+    },
+    {
+      "id": 103,
+      "type": "stat",
+      "title": "Restart Burst (15m)",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(pm2_app_restart_count{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}[15m]) > 3)",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "background", "graphMode": "none", "textMode": "value" },
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }] } }, "overrides": [] }
+    },
+    {
+      "id": 104,
+      "type": "stat",
+      "title": "Top Restart Anomaly (1h)",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(topk(1, sum by(server,app) (clamp_min(increase(pm2_app_restart_count{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}[1h]),0))))",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "background", "graphMode": "none", "textMode": "value" },
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 3 }, { "color": "red", "value": 10 }] } }, "overrides": [] }
+    },
+    {
+      "id": 105,
+      "type": "stat",
+      "title": "Host Free Memory",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(pm2_free_memory{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\"})",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none" },
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] }
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 4 },
+      "id": 2,
+      "panels": [],
+      "title": "PM2 App List (QuickStat Style)",
+      "type": "row"
+    },
+    {
+      "id": 1,
+      "type": "table",
+      "title": "PM2 List",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 5 },
+      "targets": [
+        { "refId": "A", "expr": "max by(server, serviceName, app) (pm2_app_status{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"})", "format": "table", "instant": true, "range": false },
+        { "refId": "B", "expr": "max by(server, serviceName, app) (pm2_app_restart_count{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"})", "format": "table", "instant": true, "range": false },
+        { "refId": "C", "expr": "max by(server, serviceName, app) (pm2_app_uptime{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"})", "format": "table", "instant": true, "range": false },
+        { "refId": "D", "expr": "max by(server, serviceName, app) (pm2_app_average_cpu{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"})", "format": "table", "instant": true, "range": false },
+        { "refId": "E", "expr": "max by(server, serviceName, app) (pm2_app_total_memory{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"})", "format": "table", "instant": true, "range": false },
+        { "refId": "F", "expr": "max by(server, serviceName, app) (pm2_app_average_memory{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"})", "format": "table", "instant": true, "range": false },
+        { "refId": "G", "expr": "max by(server, serviceName, app) (pm2_event_loop_latency{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"})", "format": "table", "instant": true, "range": false },
+        { "refId": "H", "expr": "max by(server, serviceName, app) ((pm2_http_mean_latency{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}) or on(job,instance,server,serviceName,app) (0 * pm2_app_status{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}))", "format": "table", "instant": true, "range": false },
+        { "refId": "I", "expr": "max by(server, serviceName, app) ((pm2_http_p95_latency{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}) or on(job,instance,server,serviceName,app) (0 * pm2_app_status{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}))", "format": "table", "instant": true, "range": false },
+        { "refId": "J", "expr": "max by(server, serviceName, app) ((pm2_http{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}) or on(job,instance,server,serviceName,app) (0 * pm2_app_status{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}))", "format": "table", "instant": true, "range": false }
+      ],
+      "transformations": [
+        { "id": "joinByField", "options": { "byField": "app", "mode": "outer" } },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time 1": true, "Time 2": true, "Time 3": true, "Time 4": true, "Time 5": true,
+              "Time 6": true, "Time 7": true, "Time 8": true, "Time 9": true, "Time 10": true
+            },
+            "renameByName": {
+              "server": "Server",
+              "serviceName": "Service",
+              "app": "App Name",
+              "Value #A": "Status",
+              "Value #B": "Restart Count",
+              "Value #C": "Uptime (s)",
+              "Value #D": "CPU Usage",
+              "Value #E": "Memory RSS",
+              "Value #F": "Memory Avg",
+              "Value #G": "Event Loop Latency",
+              "Value #H": "HTTP Latency Mean",
+              "Value #I": "HTTP Latency P95",
+              "Value #J": "HTTP Requests/sec"
+            }
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": { "show": false, "reducer": ["sum"], "fields": "", "countRows": false, "enablePagination": false },
+        "sortBy": [{ "displayName": "Status", "desc": false }]
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": { "align": "center", "cellOptions": { "type": "auto" }, "inspect": false, "minWidth": 50 },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 80 }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Status" },
+            "properties": [
+              { "id": "custom.cellOptions", "value": { "type": "color-background" } },
+              { "id": "custom.width", "value": 90 },
+              { "id": "unit", "value": "bool_on_off" },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "red", "value": null },
+                    { "color": "red", "value": 0 },
+                    { "color": "green", "value": 1 }
+                  ]
+                }
+              }
+            ]
+          },
+          { "matcher": { "id": "byName", "options": "App Name" }, "properties": [{ "id": "custom.align", "value": "left" }] },
+          { "matcher": { "id": "byName", "options": "CPU Usage" }, "properties": [{ "id": "unit", "value": "percent" }, { "id": "custom.width", "value": 110 }] },
+          { "matcher": { "id": "byName", "options": "Memory RSS" }, "properties": [{ "id": "unit", "value": "decbytes" }, { "id": "custom.width", "value": 120 }] },
+          { "matcher": { "id": "byName", "options": "Memory Avg" }, "properties": [{ "id": "unit", "value": "decbytes" }, { "id": "custom.width", "value": 120 }] },
+          { "matcher": { "id": "byName", "options": "Uptime (s)" }, "properties": [{ "id": "unit", "value": "s" }, { "id": "custom.width", "value": 110 }] },
+          { "matcher": { "id": "byName", "options": "Event Loop Latency" }, "properties": [{ "id": "unit", "value": "ms" }] },
+          { "matcher": { "id": "byName", "options": "HTTP Latency Mean" }, "properties": [{ "id": "unit", "value": "ms" }] },
+          { "matcher": { "id": "byName", "options": "HTTP Latency P95" }, "properties": [{ "id": "unit", "value": "ms" }] },
+          { "matcher": { "id": "byName", "options": "HTTP Requests/sec" }, "properties": [{ "id": "unit", "value": "reqps" }] }
+        ]
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 17 },
+      "id": 3,
+      "panels": [],
+      "title": "PM2 Metrics",
+      "type": "row"
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "App Uptime",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 18 },
+      "targets": [{ "refId": "A", "expr": "pm2_app_uptime{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}", "legendFormat": "{{server}} / {{app}}" }],
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "App Memory RSS",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 18 },
+      "targets": [{ "refId": "A", "expr": "pm2_app_total_memory{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}", "legendFormat": "{{server}} / {{app}}" }],
+      "fieldConfig": { "defaults": { "unit": "decbytes" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Heap Used / Heap Total",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 18 },
+      "targets": [
+        { "refId": "A", "expr": "pm2_used_heap_size{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}", "legendFormat": "Used - {{server}} / {{app}}" },
+        { "refId": "B", "expr": "pm2_heap_size{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}", "legendFormat": "Total - {{server}} / {{app}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "decbytes" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "App CPU Usage",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 26 },
+      "targets": [{ "refId": "A", "expr": "pm2_app_average_cpu{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}", "legendFormat": "{{server}} / {{app}}" }],
+      "fieldConfig": { "defaults": { "unit": "percent" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "App Restarts (Counter)",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 26 },
+      "targets": [
+        { "refId": "A", "expr": "pm2_app_restart_count{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}", "legendFormat": "Counter - {{server}} / {{app}}" },
+        { "refId": "B", "expr": "increase(pm2_app_restart_count{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}[15m])", "legendFormat": "Burst15m - {{server}} / {{app}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "App Event Loop Latency",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 26 },
+      "targets": [
+        { "refId": "A", "expr": "pm2_event_loop_latency{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}", "legendFormat": "Mean - {{server}} / {{app}}" },
+        { "refId": "B", "expr": "pm2_event_loop_latency_p95{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}", "legendFormat": "P95 - {{server}} / {{app}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "App HTTP Latency",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 34 },
+      "targets": [
+        { "refId": "A", "expr": "(pm2_http_mean_latency{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}) or on(job,instance,server,serviceName,app) (0 * pm2_app_status{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"})", "legendFormat": "Mean - {{server}} / {{app}}" },
+        { "refId": "B", "expr": "(pm2_http_p95_latency{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}) or on(job,instance,server,serviceName,app) (0 * pm2_app_status{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"})", "legendFormat": "P95 - {{server}} / {{app}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } }
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "App Active Handles & Requests",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 34 },
+      "targets": [
+        { "refId": "A", "expr": "pm2_active_handles{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}", "legendFormat": "Handles - {{server}} / {{app}}" },
+        { "refId": "B", "expr": "pm2_active_requests{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}", "legendFormat": "Requests - {{server}} / {{app}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } }
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "App HTTP Requests",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 34 },
+      "targets": [{ "refId": "A", "expr": "((pm2_http{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}) or on(job,instance,server,serviceName,app) (0 * pm2_app_status{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"})) * 60", "legendFormat": "{{server}} / {{app}}" }],
+      "fieldConfig": { "defaults": { "unit": "reqpm" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } }
+    },
+    {
+      "id": 106,
+      "type": "stat",
+      "title": "HTTP Metric Availability Badge",
+      "description": "1 = HTTP metrics unavailable (dashboard fallback aktif), 0 = HTTP metrics tersedia",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 3, "w": 6, "x": 0, "y": 42 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max((absent(pm2_http{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}) or absent(pm2_http_mean_latency{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}) or absent(pm2_http_p95_latency{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\",app=~\"$app\"}) or vector(0)))",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "HTTP metrics available" } } },
+            { "type": "value", "options": { "1": { "text": "HTTP metric unavailable" } } }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": ["pm2", "noc", "quickstat-style", "operations"],
+  "templating": {
+    "list": [
+      {
+        "name": "job",
+        "label": "PM2 Job",
+        "type": "query",
+        "datasource": "Prometheus",
+        "definition": "label_values(up{job=~\"pm2-.*\"}, job)",
+        "query": { "query": "label_values(up{job=~\"pm2-.*\"}, job)", "refId": "StandardVariableQuery" },
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "sort": 1,
+        "current": { "selected": true, "text": "All", "value": "$__all" }
+      },
+      {
+        "name": "server",
+        "label": "Server",
+        "type": "query",
+        "datasource": "Prometheus",
+        "definition": "label_values(up{job=~\"$job\"}, server)",
+        "query": { "query": "label_values(up{job=~\"$job\"}, server)", "refId": "StandardVariableQuery" },
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "sort": 1,
+        "current": { "selected": true, "text": "All", "value": "$__all" }
+      },
+      {
+        "name": "serviceName",
+        "label": "Service Name",
+        "type": "query",
+        "datasource": "Prometheus",
+        "definition": "label_values(pm2_available_apps{job=~\"$job\",server=~\"$server\"}, serviceName)",
+        "query": { "query": "label_values(pm2_available_apps{job=~\"$job\",server=~\"$server\"}, serviceName)", "refId": "StandardVariableQuery" },
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "sort": 1,
+        "current": { "selected": true, "text": "All", "value": "$__all" }
+      },
+      {
+        "name": "app",
+        "label": "PM2 App Name",
+        "type": "query",
+        "datasource": "Prometheus",
+        "definition": "label_values(pm2_app_status{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\"}, app)",
+        "query": { "query": "label_values(pm2_app_status{job=~\"$job\",server=~\"$server\",serviceName=~\"$serviceName\"}, app)", "refId": "StandardVariableQuery" },
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "sort": 1,
+        "current": { "selected": true, "text": "All", "value": "$__all" }
+      },
+      {
+        "name": "Filters",
+        "type": "adhoc",
+        "datasource": "Prometheus",
+        "filters": []
+      }
+    ]
+  },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "PM2 Monitoring | Unified NOC",
+  "uid": "pm2-noc-v3-quickstyle",
+  "version": 1,
+  "weekStart": ""
+}

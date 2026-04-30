@@ -8,58 +8,83 @@ groups:
     rules:
 
       # ---------------------------------------------------------
-      # PM2 process stopped
+      # PM2 app status (running=1, pending=2, stopped=3, errored=4)
       # ---------------------------------------------------------
-      - alert: PM2ProcessStopped
-        expr: pm2_up == 0
+      - alert: PM2AppNotRunning
+        expr: |
+          pm2_app_status{job=~"pm2-.*"} != 1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PM2 app '{{ $labels.app }}' tidak running di {{ $labels.server }}"
+          description: "Status app {{ $labels.app }} pada {{ $labels.server }} bukan running (value={{ $value | printf \"%.0f\" }}) selama >2 menit."
+
+      # ---------------------------------------------------------
+      # PM2 restart burst - normal apps (anti-noise)
+      # ---------------------------------------------------------
+      - alert: PM2RestartBurst
+        expr: |
+          increase(pm2_app_restart_count{job=~"pm2-.*",app!~"ddos:.*"}[15m]) > 3
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PM2 app '{{ $labels.app }}' restart burst di {{ $labels.server }}"
+          description: "App {{ $labels.app }} restart {{ $value | printf \"%.0f\" }}x dalam 15 menit."
+
+      - alert: PM2RestartBurstCritical
+        expr: |
+          increase(pm2_app_restart_count{job=~"pm2-.*",app!~"ddos:.*"}[5m]) > 5
         for: 1m
         labels:
           severity: critical
         annotations:
-          summary: "PM2 process '{{ $labels.name }}' MATI di {{ $labels.server }}"
-          description: "PM2 process {{ $labels.name }} (id: {{ $labels.id }}) di {{ $labels.server }} tidak berjalan."
+          summary: "PM2 app '{{ $labels.app }}' restart loop di {{ $labels.server }}"
+          description: "App {{ $labels.app }} restart {{ $value | printf \"%.0f\" }}x dalam 5 menit."
 
       # ---------------------------------------------------------
-      # PM2 process restart
+      # PM2 restart burst - noisy app family ddos:*
+      # threshold sengaja lebih tinggi untuk mengurangi false/noise
       # ---------------------------------------------------------
-      - alert: PM2ProcessRestarting
-        expr: increase(pm2_restart_count[15m]) > 3
-        for: 0m
+      - alert: PM2RestartBurstNoisyFamily
+        expr: |
+          increase(pm2_app_restart_count{job=~"pm2-.*",app=~"ddos:.*"}[15m]) > 50
+        for: 5m
         labels:
           severity: warning
         annotations:
-          summary: "PM2 process '{{ $labels.name }}' sering restart di {{ $labels.server }}"
-          description: "PM2 process {{ $labels.name }} sudah restart {{ $value | printf \"%.0f\" }} kali dalam 15 menit."
-
-      - alert: PM2ProcessRestartCritical
-        expr: increase(pm2_restart_count[5m]) > 5
-        for: 0m
-        labels:
-          severity: critical
-        annotations:
-          summary: "PM2 process '{{ $labels.name }}' restart loop di {{ $labels.server }}"
-          description: "PM2 process {{ $labels.name }} restart {{ $value | printf \"%.0f\" }} kali dalam 5 menit!"
+          summary: "PM2 noisy app '{{ $labels.app }}' restart sangat tinggi di {{ $labels.server }}"
+          description: "App family ddos:* restart {{ $value | printf \"%.0f\" }}x dalam 15 menit (threshold noise-aware)."
 
       # ---------------------------------------------------------
       # PM2 memory
       # ---------------------------------------------------------
       - alert: PM2HighMemory
-        expr: pm2_memory_bytes / 1024 / 1024 > 512
+        expr: |
+          (
+            pm2_app_total_memory{job=~"pm2-.*"} / 1024 / 1024 > 512
+          )
+          and on (job, instance, server, serviceName, app)
+          (pm2_app_status{job=~"pm2-.*"} == 1)
         for: 5m
         labels:
           severity: warning
         annotations:
-          summary: "PM2 process '{{ $labels.name }}' memakai banyak memory di {{ $labels.server }}"
+          summary: "PM2 app '{{ $labels.app }}' memory tinggi di {{ $labels.server }}"
           description: "Memory usage: {{ $value | printf \"%.0f\" }} MB."
 
       # ---------------------------------------------------------
       # PM2 CPU
       # ---------------------------------------------------------
       - alert: PM2HighCPU
-        expr: pm2_cpu_percent > 80
+        expr: |
+          (pm2_app_average_cpu{job=~"pm2-.*"} > 80)
+          and on (job, instance, server, serviceName, app)
+          (pm2_app_status{job=~"pm2-.*"} == 1)
         for: 5m
         labels:
           severity: warning
         annotations:
-          summary: "PM2 process '{{ $labels.name }}' CPU tinggi di {{ $labels.server }}"
+          summary: "PM2 app '{{ $labels.app }}' CPU tinggi di {{ $labels.server }}"
           description: "CPU usage: {{ $value | printf \"%.1f\" }}%."
