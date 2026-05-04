@@ -105,7 +105,7 @@ receivers:
 
   - name: "default-receiver"
     email_configs:
-      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com, admin@sateknologi.id"
+      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com"
         send_resolved: true
         html: '{{ template "email.custom.html" . }}'
         text: '{{ template "email.custom.text" . }}'
@@ -114,7 +114,7 @@ receivers:
 
   - name: "critical-receiver"
     email_configs:
-      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com, admin@sateknologi.id"
+      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com"
         send_resolved: true
         html: '{{ template "email.custom.html" . }}'
         text: '{{ template "email.custom.text" . }}'
@@ -127,7 +127,7 @@ receivers:
 
   - name: "prod-receiver"
     email_configs:
-      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com, admin@sateknologi.id"
+      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com"
         send_resolved: true
         html: '{{ template "email.custom.html" . }}'
         text: '{{ template "email.custom.text" . }}'
@@ -136,7 +136,7 @@ receivers:
 
   - name: "mail-receiver"
     email_configs:
-      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com, admin@sateknologi.id"
+      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com"
         send_resolved: true
         html: '{{ template "email.custom.html" . }}'
         text: '{{ template "email.custom.text" . }}'
@@ -145,7 +145,7 @@ receivers:
 
   - name: "elastic-receiver"
     email_configs:
-      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com, admin@sateknologi.id"
+      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com"
         send_resolved: true
         html: '{{ template "email.custom.html" . }}'
         text: '{{ template "email.custom.text" . }}'
@@ -154,7 +154,7 @@ receivers:
 
   - name: "gitea-receiver"
     email_configs:
-      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com, admin@sateknologi.id"
+      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com"
         send_resolved: true
         html: '{{ template "email.custom.html" . }}'
         text: '{{ template "email.custom.text" . }}'
@@ -163,7 +163,7 @@ receivers:
 
   - name: "dev-receiver"
     email_configs:
-      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com, admin@sateknologi.id"
+      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com"
         send_resolved: true
         html: '{{ template "email.custom.html" . }}'
         text: '{{ template "email.custom.text" . }}'
@@ -172,7 +172,7 @@ receivers:
 
   - name: "info-receiver"
     email_configs:
-      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com, admin@sateknologi.id"
+      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com"
         send_resolved: false
         html: '{{ template "email.custom.html" . }}'
         text: '{{ template "email.custom.text" . }}'

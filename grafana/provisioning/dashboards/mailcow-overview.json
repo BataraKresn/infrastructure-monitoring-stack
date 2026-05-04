@@ -1,0 +1,326 @@
+{
+  "annotations": { "list": [] },
+  "description": "Mailcow Mail Server — monitoring lengkap: domain, mailbox, container, rspamd, API",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+
+    { "id": 1, "type": "stat", "title": "Exporter UP", "datasource": "Prometheus",
+      "gridPos": { "h": 3, "w": 4, "x": 0, "y": 0 },
+      "targets": [{ "refId": "A", "expr": "up{job=\"mailcow\"} or on() vector(0)", "instant": true }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none", "text": {} },
+      "fieldConfig": { "defaults": { "unit": "short", "mappings": [{ "type": "value", "options": { "0": { "text": "DOWN", "color": "red", "index": 0 }, "1": { "text": "UP", "color": "green", "index": 1 } } }], "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] } }, "overrides": [] }
+    },
+    { "id": 2, "type": "stat", "title": "API Success", "datasource": "Prometheus",
+      "gridPos": { "h": 3, "w": 4, "x": 4, "y": 0 },
+      "targets": [{ "refId": "A", "expr": "min(mailcow_api_success{job=\"mailcow\"}) or on() vector(0)", "instant": true }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": { "defaults": { "unit": "short", "mappings": [{ "type": "value", "options": { "0": { "text": "FAIL", "color": "red", "index": 0 }, "1": { "text": "OK", "color": "green", "index": 1 } } }], "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] } }, "overrides": [] }
+    },
+    { "id": 3, "type": "stat", "title": "Providers OK", "datasource": "Prometheus",
+      "gridPos": { "h": 3, "w": 4, "x": 8, "y": 0 },
+      "targets": [{ "refId": "A", "expr": "sum(mailcow_exporter_success{job=\"mailcow\"}) or on() vector(0)", "instant": true }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "orange", "value": 5 }, { "color": "green", "value": 7 }] } }, "overrides": [] }
+    },
+    { "id": 4, "type": "stat", "title": "Containers Running", "datasource": "Prometheus",
+      "gridPos": { "h": 3, "w": 4, "x": 12, "y": 0 },
+      "targets": [{ "refId": "A", "expr": "sum(mailcow_container_running{job=\"mailcow\"}) or on() vector(0)", "instant": true }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "orange", "value": 15 }, { "color": "green", "value": 19 }] } }, "overrides": [] }
+    },
+    { "id": 5, "type": "stat", "title": "Total Messages", "datasource": "Prometheus",
+      "gridPos": { "h": 3, "w": 4, "x": 16, "y": 0 },
+      "targets": [{ "refId": "A", "expr": "sum(mailcow_domain_messages{job=\"mailcow\"}) or on() vector(0)", "instant": true }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "area" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+    },
+    { "id": 6, "type": "stat", "title": "Rspamd Scanned", "datasource": "Prometheus",
+      "gridPos": { "h": 3, "w": 4, "x": 20, "y": 0 },
+      "targets": [{ "refId": "A", "expr": "mailcow_rspamd_scanned{job=\"mailcow\"} or on() vector(0)", "instant": true }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "area" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+    },
+
+    { "id": 200, "type": "row", "title": "📨 Domain & Quota", "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 3 }, "panels": [] },
+
+    { "id": 10, "type": "stat", "title": "Domain: sateknologi.id", "datasource": "Prometheus",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 4 },
+      "targets": [{ "refId": "A", "expr": "mailcow_domain_active{job=\"mailcow\"} or on() vector(0)", "instant": true, "legendFormat": "{{domain}}" }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none", "orientation": "horizontal" },
+      "fieldConfig": { "defaults": { "unit": "short", "mappings": [{ "type": "value", "options": { "0": { "text": "INACTIVE", "color": "red" }, "1": { "text": "ACTIVE", "color": "green" } } }], "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] } }, "overrides": [] }
+    },
+    { "id": 11, "type": "stat", "title": "Mailboxes Used / Max", "datasource": "Prometheus",
+      "gridPos": { "h": 4, "w": 5, "x": 4, "y": 4 },
+      "targets": [
+        { "refId": "A", "expr": "mailcow_domain_mailboxes{job=\"mailcow\"} or on() vector(0)", "instant": true, "legendFormat": "Used" },
+        { "refId": "B", "expr": "mailcow_domain_max_mailboxes{job=\"mailcow\"} or on() vector(0)", "instant": true, "legendFormat": "Max" }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none", "orientation": "horizontal" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+    },
+    { "id": 12, "type": "stat", "title": "Aliases Used / Max", "datasource": "Prometheus",
+      "gridPos": { "h": 4, "w": 5, "x": 9, "y": 4 },
+      "targets": [
+        { "refId": "A", "expr": "mailcow_domain_aliases{job=\"mailcow\"} or on() vector(0)", "instant": true, "legendFormat": "Used" },
+        { "refId": "B", "expr": "mailcow_domain_max_aliases{job=\"mailcow\"} or on() vector(0)", "instant": true, "legendFormat": "Max" }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none", "orientation": "horizontal" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+    },
+    { "id": 13, "type": "gauge", "title": "Domain Quota Used %", "datasource": "Prometheus",
+      "gridPos": { "h": 4, "w": 5, "x": 14, "y": 4 },
+      "targets": [{ "refId": "A", "expr": "100 * mailcow_domain_quota_used{job=\"mailcow\"} / clamp_min(mailcow_domain_quota_allowed{job=\"mailcow\"}, 1)", "instant": true, "legendFormat": "{{domain}}" }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "minVizWidth": 75, "minVizHeight": 75, "showThresholdLabels": false, "showThresholdMarkers": true },
+      "fieldConfig": { "defaults": { "unit": "percent", "decimals": 2, "min": 0, "max": 100, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 70 }, { "color": "red", "value": 90 }] } }, "overrides": [] }
+    },
+    { "id": 14, "type": "stat", "title": "Domain Quota Used", "datasource": "Prometheus",
+      "gridPos": { "h": 4, "w": 5, "x": 19, "y": 4 },
+      "targets": [
+        { "refId": "A", "expr": "mailcow_domain_quota_used{job=\"mailcow\"} or on() vector(0)", "instant": true, "legendFormat": "Used" },
+        { "refId": "B", "expr": "mailcow_domain_quota_allowed{job=\"mailcow\"} or on() vector(0)", "instant": true, "legendFormat": "Allowed" }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none", "orientation": "horizontal" },
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] }
+    },
+
+    { "id": 201, "type": "row", "title": "📬 Mailbox Overview", "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 8 }, "panels": [] },
+
+    { "id": 20, "type": "table", "title": "Mailbox — Messages & Quota", "datasource": "Prometheus",
+      "gridPos": { "h": 10, "w": 14, "x": 0, "y": 9 },
+      "targets": [
+        { "refId": "A", "expr": "mailcow_mailbox_messages{job=\"mailcow\"}", "instant": true, "legendFormat": "", "format": "table" },
+        { "refId": "B", "expr": "mailcow_mailbox_quota_used{job=\"mailcow\"}", "instant": true, "legendFormat": "", "format": "table" },
+        { "refId": "C", "expr": "100 * mailcow_mailbox_quota_used{job=\"mailcow\"} / clamp_min(mailcow_mailbox_quota_allowed{job=\"mailcow\"}, 1)", "instant": true, "legendFormat": "", "format": "table" }
+      ],
+      "options": { "sortBy": [{ "displayName": "Messages", "desc": true }], "footer": { "show": false } },
+      "transformations": [
+        { "id": "filterFieldsByName", "options": { "include": { "names": ["mailbox", "Value"] } } },
+        { "id": "joinByField", "options": { "byField": "mailbox", "mode": "outer" } },
+        { "id": "organize", "options": {
+          "renameByName": { "mailbox": "Mailbox", "Value": "Messages", "Value 1": "Quota Used", "Value 2": "Quota %" },
+          "excludeByName": {}
+        }}
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short" },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Quota Used" }, "properties": [{ "id": "unit", "value": "bytes" }] },
+          { "matcher": { "id": "byName", "options": "Quota %" }, "properties": [
+            { "id": "unit", "value": "percent" },
+            { "id": "decimals", "value": 2 },
+            { "id": "custom.displayMode", "value": "color-background" },
+            { "id": "thresholds", "value": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 70 }, { "color": "red", "value": 90 }] } }
+          ]}
+        ]
+      }
+    },
+    { "id": 21, "type": "bargauge", "title": "Messages per Mailbox", "datasource": "Prometheus",
+      "gridPos": { "h": 10, "w": 10, "x": 14, "y": 9 },
+      "targets": [{ "refId": "A", "expr": "sort_desc(mailcow_mailbox_messages{job=\"mailcow\"}) or on() vector(0)", "instant": true, "legendFormat": "{{mailbox}}" }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "horizontal", "displayMode": "gradient", "showUnfilled": true, "minVizWidth": 10, "minVizHeight": 10 },
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0, "thresholds": { "mode": "percentage", "steps": [{ "color": "blue", "value": null }, { "color": "cyan", "value": 80 }] }, "color": { "mode": "continuous-BlPu" } }, "overrides": [] }
+    },
+    { "id": 22, "type": "bargauge", "title": "Mailbox Quota Used (bytes) — sorted by usage", "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 14, "x": 0, "y": 19 },
+      "targets": [{ "refId": "A", "expr": "sort_desc(mailcow_mailbox_quota_used{job=\"mailcow\"})", "instant": true, "legendFormat": "{{mailbox}}" }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "horizontal", "displayMode": "lcd", "showUnfilled": true, "minVizWidth": 10, "minVizHeight": 10 },
+      "fieldConfig": { "defaults": { "unit": "bytes", "min": 0, "color": { "mode": "continuous-GrYlRd" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 7516192768 }, { "color": "red", "value": 9663676416 }] } }, "overrides": [] }
+    },
+    { "id": 220, "type": "bargauge", "title": "Mailbox Quota Used % per Akun", "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 10, "x": 14, "y": 19 },
+      "targets": [{ "refId": "A", "expr": "sort_desc(100 * mailcow_mailbox_quota_used{job=\"mailcow\"} / clamp_min(mailcow_mailbox_quota_allowed{job=\"mailcow\"}, 1))", "instant": true, "legendFormat": "{{mailbox}}" }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "horizontal", "displayMode": "lcd", "showUnfilled": true },
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "decimals": 2, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 70 }, { "color": "red", "value": 90 }] } }, "overrides": [] }
+    },
+    { "id": 23, "type": "timeseries", "title": "Last Login per Mailbox", "datasource": "Prometheus",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 27 },
+      "targets": [{ "refId": "A", "expr": "mailcow_mailbox_last_login{job=\"mailcow\"} > 0", "legendFormat": "{{mailbox}}" }],
+      "options": { "legend": { "displayMode": "table", "placement": "right", "showLegend": true, "sortBy": "Last", "sortDesc": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "fieldConfig": { "defaults": { "unit": "dateTimeAsIso" }, "overrides": [] }
+    },
+
+    { "id": 202, "type": "row", "title": "🐳 Mailcow Containers", "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 33 }, "panels": [] },
+
+    { "id": 30, "type": "bargauge", "title": "Container Status (1=running, 0=stopped)", "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 14, "x": 0, "y": 34 },
+      "targets": [{ "refId": "A", "expr": "mailcow_container_running{job=\"mailcow\"} or on() vector(0)", "instant": true, "legendFormat": "{{container}}" }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "horizontal", "displayMode": "color-background", "showUnfilled": true },
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0, "max": 1, "mappings": [{ "type": "value", "options": { "0": { "text": "STOPPED", "color": "red" }, "1": { "text": "RUNNING", "color": "green" } } }], "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] } }, "overrides": [] }
+    },
+    { "id": 31, "type": "table", "title": "Container Uptime", "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 10, "x": 14, "y": 34 },
+      "targets": [{ "refId": "A", "expr": "time() - mailcow_container_start{job=\"mailcow\"}", "instant": true, "legendFormat": "{{container}}", "format": "table" }],
+      "options": { "sortBy": [{ "displayName": "Uptime", "desc": true }], "footer": { "show": false } },
+      "transformations": [
+        { "id": "organize", "options": { "renameByName": { "container": "Container", "Value": "Uptime", "image": "Image" }, "excludeByName": { "Time": true, "job": true, "host": true } } }
+      ],
+      "fieldConfig": { "defaults": { "unit": "dtdurations" }, "overrides": [{ "matcher": { "id": "byName", "options": "Container" }, "properties": [{ "id": "custom.width", "value": 200 }] }] }
+    },
+    { "id": 32, "type": "timeseries", "title": "Container Running State (history)", "datasource": "Prometheus",
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 42 },
+      "targets": [{ "refId": "A", "expr": "mailcow_container_running{job=\"mailcow\"}", "legendFormat": "{{container}}" }],
+      "options": { "legend": { "displayMode": "table", "placement": "right", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "none" } },
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0, "max": 1, "custom": { "lineWidth": 2, "fillOpacity": 20 } }, "overrides": [] }
+    },
+
+    { "id": 203, "type": "row", "title": "🔒 Rspamd — Spam Filtering", "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 49 }, "panels": [] },
+
+    { "id": 40, "type": "stat", "title": "Total Scanned", "datasource": "Prometheus",
+      "gridPos": { "h": 3, "w": 4, "x": 0, "y": 50 },
+      "targets": [{ "refId": "A", "expr": "mailcow_rspamd_scanned{job=\"mailcow\"} or on() vector(0)", "instant": true }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+    },
+    { "id": 41, "type": "stat", "title": "Ham (legit)", "datasource": "Prometheus",
+      "gridPos": { "h": 3, "w": 4, "x": 4, "y": 50 },
+      "targets": [{ "refId": "A", "expr": "mailcow_rspamd_classification{job=\"mailcow\",classification=\"ham\"} or on() vector(0)", "instant": true }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "fixedColor": "green", "mode": "fixed" } }, "overrides": [] }
+    },
+    { "id": 42, "type": "stat", "title": "Spam", "datasource": "Prometheus",
+      "gridPos": { "h": 3, "w": 4, "x": 8, "y": 50 },
+      "targets": [{ "refId": "A", "expr": "mailcow_rspamd_classification{job=\"mailcow\",classification=\"spam\"} or on() vector(0)", "instant": true }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "fixedColor": "red", "mode": "fixed" } }, "overrides": [] }
+    },
+    { "id": 43, "type": "stat", "title": "Rejected", "datasource": "Prometheus",
+      "gridPos": { "h": 3, "w": 4, "x": 12, "y": 50 },
+      "targets": [{ "refId": "A", "expr": "mailcow_rspamd_action{job=\"mailcow\",action=\"reject\"} or on() vector(0)", "instant": true }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }, { "color": "red", "value": 10 }] } }, "overrides": [] }
+    },
+    { "id": 44, "type": "stat", "title": "Connections", "datasource": "Prometheus",
+      "gridPos": { "h": 3, "w": 4, "x": 16, "y": 50 },
+      "targets": [{ "refId": "A", "expr": "mailcow_rspamd_connections{job=\"mailcow\"} or on() vector(0)", "instant": true }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+    },
+    { "id": 45, "type": "stat", "title": "Learned", "datasource": "Prometheus",
+      "gridPos": { "h": 3, "w": 4, "x": 20, "y": 50 },
+      "targets": [{ "refId": "A", "expr": "mailcow_rspamd_learned{job=\"mailcow\"} or on() vector(0)", "instant": true }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+    },
+
+    { "id": 46, "type": "piechart", "title": "Rspamd Actions Distribution", "datasource": "Prometheus",
+      "gridPos": { "h": 9, "w": 8, "x": 0, "y": 53 },
+      "targets": [{ "refId": "A", "expr": "mailcow_rspamd_action{job=\"mailcow\"} > 0", "instant": true, "legendFormat": "{{action}}" }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "pieType": "donut", "legend": { "displayMode": "table", "placement": "right", "showLegend": true, "values": ["value","percent"] }, "tooltip": { "mode": "single" } },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+    },
+    { "id": 47, "type": "piechart", "title": "Rspamd Ham vs Spam", "datasource": "Prometheus",
+      "gridPos": { "h": 9, "w": 8, "x": 8, "y": 53 },
+      "targets": [{ "refId": "A", "expr": "mailcow_rspamd_classification{job=\"mailcow\"}", "instant": true, "legendFormat": "{{classification}}" }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "pieType": "donut", "legend": { "displayMode": "table", "placement": "right", "showLegend": true, "values": ["value","percent"] }, "tooltip": { "mode": "single" } },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [
+        { "matcher": { "id": "byName", "options": "ham" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }] },
+        { "matcher": { "id": "byName", "options": "spam" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] }
+      ] }
+    },
+    { "id": 48, "type": "bargauge", "title": "Rspamd Action Counts", "datasource": "Prometheus",
+      "gridPos": { "h": 9, "w": 8, "x": 16, "y": 53 },
+      "targets": [{ "refId": "A", "expr": "mailcow_rspamd_action{job=\"mailcow\"} or on() vector(0)", "instant": true, "legendFormat": "{{action}}" }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "horizontal", "displayMode": "gradient", "showUnfilled": true },
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0, "color": { "mode": "continuous-GrYlRd" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } }, "overrides": [] }
+    },
+    { "id": 49, "type": "timeseries", "title": "Rspamd Actions (trend)", "datasource": "Prometheus",
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 62 },
+      "targets": [{ "refId": "A", "expr": "mailcow_rspamd_action{job=\"mailcow\"}", "legendFormat": "{{action}}" }],
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10 } }, "overrides": [] }
+    },
+    { "id": 50, "type": "timeseries", "title": "Rspamd Memory (bytes allocated)", "datasource": "Prometheus",
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 62 },
+      "targets": [
+        { "refId": "A", "expr": "mailcow_rspamd_bytes_allocated{job=\"mailcow\"} or on() vector(0)", "legendFormat": "bytes allocated" },
+        { "refId": "B", "expr": "sum(mailcow_rspamd_pools{job=\"mailcow\",state=\"allocated\"}) or on() vector(0)", "legendFormat": "pools allocated" },
+        { "refId": "C", "expr": "sum(mailcow_rspamd_chunks{job=\"mailcow\",state=\"oversized\"}) or on() vector(0)", "legendFormat": "chunks oversized" }
+      ],
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 } }, "overrides": [
+        { "matcher": { "id": "byName", "options": "bytes allocated" }, "properties": [{ "id": "unit", "value": "bytes" }] },
+        { "matcher": { "id": "byName", "options": "pools allocated" }, "properties": [{ "id": "unit", "value": "short" }] },
+        { "matcher": { "id": "byName", "options": "chunks oversized" }, "properties": [{ "id": "unit", "value": "short" }] }
+      ] }
+    },
+    { "id": 51, "type": "bargauge", "title": "Fuzzy Hashes (mailcow + rspamd.com)", "datasource": "Prometheus",
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 69 },
+      "targets": [{ "refId": "A", "expr": "mailcow_rspamd_fuzzy_hashes{job=\"mailcow\"} or on() vector(0)", "instant": true, "legendFormat": "{{action}}" }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "horizontal", "displayMode": "gradient", "showUnfilled": true },
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "continuous-BlPu" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] } }, "overrides": [] }
+    },
+
+    { "id": 204, "type": "row", "title": "⚡ API Performance", "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 73 }, "panels": [] },
+
+    { "id": 60, "type": "bargauge", "title": "API Response Time per Endpoint (ms)", "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 74 },
+      "targets": [{ "refId": "A", "expr": "mailcow_api_response_time{job=\"mailcow\"} or on() vector(0)", "instant": true, "legendFormat": "{{endpoint}}" }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "horizontal", "displayMode": "gradient", "showUnfilled": true },
+      "fieldConfig": { "defaults": { "unit": "ms", "min": 0, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 200 }, { "color": "red", "value": 500 }] }, "color": { "mode": "thresholds" } }, "overrides": [] }
+    },
+    { "id": 61, "type": "bargauge", "title": "API Response Size per Endpoint (bytes)", "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 74 },
+      "targets": [{ "refId": "A", "expr": "mailcow_api_response_size{job=\"mailcow\"} or on() vector(0)", "instant": true, "legendFormat": "{{endpoint}}" }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "horizontal", "displayMode": "gradient", "showUnfilled": true },
+      "fieldConfig": { "defaults": { "unit": "bytes", "min": 0, "color": { "mode": "continuous-BlPu" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] } }, "overrides": [] }
+    },
+    { "id": 62, "type": "table", "title": "API Endpoint Health", "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 82 },
+      "targets": [
+        { "refId": "A", "expr": "mailcow_api_success{job=\"mailcow\"}", "instant": true, "format": "table" },
+        { "refId": "B", "expr": "mailcow_api_response_time{job=\"mailcow\"}", "instant": true, "format": "table" },
+        { "refId": "C", "expr": "mailcow_api_response_size{job=\"mailcow\"}", "instant": true, "format": "table" }
+      ],
+      "options": { "sortBy": [{ "displayName": "Endpoint", "desc": false }], "footer": { "show": false } },
+      "transformations": [
+        { "id": "merge", "options": {} },
+        { "id": "organize", "options": { "renameByName": { "endpoint": "Endpoint", "Value #A": "Success", "Value #B": "Response Time", "Value #C": "Response Size", "statusCode": "Status" }, "excludeByName": { "Time": true, "job": true, "host": true } } }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short" },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Success" }, "properties": [
+            { "id": "mappings", "value": [{ "type": "value", "options": { "0": { "text": "FAIL", "color": "red" }, "1": { "text": "OK", "color": "green" } } }] },
+            { "id": "custom.displayMode", "value": "color-background" },
+            { "id": "thresholds", "value": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] } }
+          ]},
+          { "matcher": { "id": "byName", "options": "Response Time" }, "properties": [
+            { "id": "unit", "value": "ms" },
+            { "id": "custom.displayMode", "value": "color-background" },
+            { "id": "thresholds", "value": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 200 }, { "color": "red", "value": 500 }] } }
+          ]},
+          { "matcher": { "id": "byName", "options": "Response Size" }, "properties": [{ "id": "unit", "value": "bytes" }] },
+          { "matcher": { "id": "byName", "options": "Endpoint" }, "properties": [{ "id": "custom.width", "value": 280 }] }
+        ]
+      }
+    },
+    { "id": 63, "type": "timeseries", "title": "API Response Time Trend", "datasource": "Prometheus",
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 90 },
+      "targets": [{ "refId": "A", "expr": "mailcow_api_response_time{job=\"mailcow\"}", "legendFormat": "{{endpoint}}" }],
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "fieldConfig": { "defaults": { "unit": "ms", "custom": { "fillOpacity": 10 }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 200 }, { "color": "red", "value": 500 }] } }, "overrides": [] }
+    },
+    { "id": 64, "type": "timeseries", "title": "API Success Status Trend", "datasource": "Prometheus",
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 90 },
+      "targets": [{ "refId": "A", "expr": "mailcow_api_success{job=\"mailcow\"}", "legendFormat": "{{endpoint}}" }],
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0, "max": 1, "custom": { "fillOpacity": 10 } }, "overrides": [] }
+    }
+
+  ],
+  "refresh": "60s",
+  "schemaVersion": 39,
+  "tags": ["mailcow", "mail", "rspamd"],
+  "templating": { "list": [] },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": { "refresh_intervals": ["30s","1m","5m","15m","30m","1h","2h","1d"] },
+  "timezone": "browser",
+  "title": "Mailcow Overview - Mail Server",
+  "uid": "mailcow-overview",
+  "version": 2,
+  "weekStart": ""
+}

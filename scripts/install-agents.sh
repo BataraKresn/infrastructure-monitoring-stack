@@ -121,7 +121,8 @@ Type=simple
 ExecStart=/usr/local/bin/node_exporter \
   --collector.filesystem.mount-points-exclude="^/(sys|proc|dev|host|etc)($$|/)" \
   --collector.systemd \
-  --collector.processes
+  --collector.processes \
+  --collector.interrupts
 Restart=on-failure
 RestartSec=5s
 

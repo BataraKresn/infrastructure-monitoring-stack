@@ -1,0 +1,29 @@
+# =============================================================
+# Netstat Counter Aliases (recording rules)
+# Purpose: Rename node_netstat_* metrics to end in _total so
+#          Prometheus naming conventions are satisfied and
+#          Grafana's PromQL linter does not warn when rate() is used.
+# =============================================================
+groups:
+  - name: netstat_counter_aliases
+    rules:
+      - record: node_netstat_Tcp_InErrs_total
+        expr: node_netstat_Tcp_InErrs
+
+      - record: node_netstat_Tcp_RetransSegs_total
+        expr: node_netstat_Tcp_RetransSegs
+
+      - record: node_netstat_TcpExt_ListenDrops_total
+        expr: node_netstat_TcpExt_ListenDrops
+
+      - record: node_netstat_TcpExt_TCPTimeouts_total
+        expr: node_netstat_TcpExt_TCPTimeouts
+
+      - record: node_netstat_TcpExt_SyncookiesSent_total
+        expr: node_netstat_TcpExt_SyncookiesSent
+
+      - record: node_netstat_TcpExt_SyncookiesRecv_total
+        expr: node_netstat_TcpExt_SyncookiesRecv
+
+      - record: node_netstat_TcpExt_SyncookiesFailed_total
+        expr: node_netstat_TcpExt_SyncookiesFailed

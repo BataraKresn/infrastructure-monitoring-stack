@@ -33,8 +33,8 @@ warn()  { echo -e "${YELLOW}[!]${NC} $1"; }
 error() { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
 info()  { echo -e "${BLUE}[i]${NC} $1"; }
 
-CADVISOR_VERSION="0.49.1"
-NODE_EXPORTER_IMAGE="prom/node-exporter:latest"
+CADVISOR_IMAGE="ghcr.io/google/cadvisor:0.56.2"
+NODE_EXPORTER_IMAGE="quay.io/prometheus/node-exporter:v1.11.1"
 
 # --- Parse args ---
 SKIP_DOCKER=false
@@ -85,7 +85,7 @@ install_deps() {
 # CADVISOR (Docker metrics)
 # =============================================================
 install_cadvisor() {
-  log "Installing cAdvisor v${CADVISOR_VERSION}..."
+  log "Installing cAdvisor (${CADVISOR_IMAGE})..."
 
   if ! command -v docker &>/dev/null; then
     warn "Docker tidak ditemukan. Install Docker terlebih dahulu."
@@ -114,17 +114,23 @@ install_cadvisor() {
     --privileged \
     --volume /:/rootfs:ro \
     --volume /var/run:/var/run:ro \
+    --volume /var/run/docker.sock:/var/run/docker.sock:ro \
     --volume /sys:/sys:ro \
+    --volume /sys/fs/cgroup:/sys/fs/cgroup:ro \
     --volume "${DOCKER_ROOT_DIR}:/var/lib/docker:ro" \
     --volume /dev/disk/:/dev/disk:ro \
     --publish 8192:8080 \
     --device /dev/kmsg \
     --env DOCKER_HOST=unix:///var/run/docker.sock \
-    --health-cmd='wget -q -T 5 -O - http://localhost:8192/metrics >/dev/null || exit 1' \
+    --health-cmd='wget -q -T 5 -O - http://127.0.0.1:8080/healthz >/dev/null || exit 1' \
     --health-interval=30s \
     --health-timeout=10s \
     --health-retries=3 \
-    gcr.io/cadvisor/cadvisor:v${CADVISOR_VERSION}
+    ${CADVISOR_IMAGE} \
+    /usr/bin/cadvisor \
+    -logtostderr \
+    -housekeeping_interval=30s \
+    -docker_only=true
 
   log "cAdvisor started: ${CADVISOR_NAME} on port 8192"
 }
@@ -155,7 +161,12 @@ install_node_exporter() {
     -v "/:/host:ro,rslave" \
     ${NODE_EXPORTER_IMAGE} \
     --path.rootfs=/host \
-    --web.listen-address=":8193"
+    --path.procfs=/host/proc \
+    --web.listen-address=":8193" \
+    --collector.processes \
+    --collector.interrupts \
+    '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc|run|var/lib/docker/.+|var/lib/containerd/.+)($|/)' \
+    '--collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$'
 
   log "Node Exporter started: ${NODE_EXPORTER_NAME} on port 8193"
 }

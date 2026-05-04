@@ -14,9 +14,14 @@ Di repo aplikasi target:
 
 ## 2) Pilih template sesuai stack
 
-- Express: `express-pm2-http-metrics.ts`
-- NestJS: `nest-pm2-http.interceptor.ts`
-- Fastify: `fastify-pm2-http-metrics.ts`
+| Framework | TypeScript | JavaScript (non-TS) |
+|-----------|-----------|---------------------|
+| Express   | `express-pm2-http-metrics.ts` | `express-pm2-http-metrics.js` |
+| NestJS    | `nest-pm2-http.interceptor.ts` | `nest-pm2-http.interceptor.js` |
+| Fastify   | `fastify-pm2-http-metrics.ts` | `fastify-pm2-http-metrics.js` |
+
+> **Catatan NestJS JS**: Karena decorator `@Injectable()` butuh transpiler, versi JS menggunakan class biasa.
+> Daftarkan langsung ke `app.useGlobalInterceptors(new Pm2HttpMetricsInterceptor())` di `main.js`.
 
 ## 3) Tempel + register di startup app
 

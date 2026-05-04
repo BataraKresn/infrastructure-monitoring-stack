@@ -30,6 +30,7 @@ rule_files:
   - "rules/mail_alerts.yml"
   - "rules/pm2_alerts.yml"
   - "rules/jenkins_alerts.yml"
+  - "rules/netstat_recording.yml"
 
 # -----------------------------------------------------------
 # Scrape configurations
@@ -168,7 +169,7 @@ scrape_configs:
   # ----------------------------------------------------------
   - job_name: "node-baremetal-ubuntu"
     static_configs:
-      - targets: ["100.92.125.27:9101"]      # baremetal-ubuntu node_exporter (Tailscale)
+      - targets: ["100.92.125.27:8193"]      # baremetal-ubuntu node_exporter (Tailscale)
         labels:
           env: "production"
           server: "baremetal-ubuntu"
@@ -176,7 +177,7 @@ scrape_configs:
 
   - job_name: "cadvisor-baremetal-ubuntu"
     static_configs:
-      - targets: ["100.92.125.27:8080"]      # baremetal-ubuntu cAdvisor (Tailscale)
+      - targets: ["100.92.125.27:8192"]      # baremetal-ubuntu cAdvisor (Tailscale)
         labels:
           env: "production"
           server: "baremetal-ubuntu"
@@ -198,7 +199,7 @@ scrape_configs:
   # ----------------------------------------------------------
   - job_name: "node-mail-svr"
     static_configs:
-      - targets: ["30.30.30.156:8193"]       # mail-svr
+      - targets: ["100.90.26.89:9100"]       # mail-svr (Tailscale)
         labels:
           env: "production"
           server: "mail-svr"
@@ -206,11 +207,28 @@ scrape_configs:
 
   - job_name: "cadvisor-mail-svr"
     static_configs:
-      - targets: ["30.30.30.156:8192"]       # mail-svr
+      - targets: ["100.90.26.89:8192"]       # mail-svr (Tailscale)
         labels:
           env: "production"
           server: "mail-svr"
           role: "mail"
+
+  # ----------------------------------------------------------
+  # [MAIL] Mailcow Exporter
+  # Metrics: mailcow domains, mailboxes, containers, rspamd, API
+  # ----------------------------------------------------------
+  - job_name: "mailcow"
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    scheme: http
+    metrics_path: /metrics
+    params:
+      token: ["rWPijTOSmBHsYf8yDlAcfoFoYBOhlyRxd1JXoKRAT0c"]
+    static_configs:
+      - targets: ["100.90.26.89:9099"]       # mail-svr mailcow-exporter (Tailscale)
+        labels:
+          instance: "mailcow-prod"
+          env: "prod"
 
   # ----------------------------------------------------------
   # [PROD] gitrepo-sat

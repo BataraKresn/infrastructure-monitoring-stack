@@ -135,6 +135,8 @@ services:
     command:
       - "--path.rootfs=/host"
       - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+      - "--collector.processes"
+      - "--collector.interrupts"
     volumes:
       - /:/host:ro,rslave
     ports:
