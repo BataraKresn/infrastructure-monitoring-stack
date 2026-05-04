@@ -105,21 +105,21 @@ receivers:
 
   - name: "default-receiver"
     email_configs:
-      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com"
+      - to: "adimaspangestu02@gmail.com, ammarans71@gmail.com"
         send_resolved: true
         html: '{{ template "email.custom.html" . }}'
         text: '{{ template "email.custom.text" . }}'
         headers:
-          Subject: "[MONITORING] {{ .GroupLabels.alertname }} - {{ .GroupLabels.server }}"
+          Subject: "[{{ if eq .CommonLabels.severity \"critical\" }}🔴 CRITICAL{{ else if eq .CommonLabels.severity \"warning\" }}🟠 WARNING{{ else if eq .CommonLabels.severity \"info\" }}🔵 INFO{{ else }}⚪ UNKNOWN{{ end }}] [MONITORING] {{ .GroupLabels.alertname }} - {{ .GroupLabels.server }}"
 
   - name: "critical-receiver"
     email_configs:
-      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com"
+      - to: "adimaspangestu02@gmail.com, ammarans71@gmail.com"
         send_resolved: true
         html: '{{ template "email.custom.html" . }}'
         text: '{{ template "email.custom.text" . }}'
         headers:
-          Subject: "[CRITICAL] {{ .GroupLabels.alertname }} - {{ .GroupLabels.server }}"
+          Subject: "[{{ if eq .CommonLabels.severity \"critical\" }}🔴 CRITICAL{{ else if eq .CommonLabels.severity \"warning\" }}🟠 WARNING{{ else if eq .CommonLabels.severity \"info\" }}🔵 INFO{{ else }}⚪ UNKNOWN{{ end }}] [CRITICAL] {{ .GroupLabels.alertname }} - {{ .GroupLabels.server }}"
     # Uncomment untuk integrasi Telegram:
     # webhook_configs:
     #   - url: "http://telegram-alertmanager:8080/alert"
@@ -127,54 +127,54 @@ receivers:
 
   - name: "prod-receiver"
     email_configs:
-      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com"
+      - to: "adimaspangestu02@gmail.com, ammarans71@gmail.com"
         send_resolved: true
         html: '{{ template "email.custom.html" . }}'
         text: '{{ template "email.custom.text" . }}'
         headers:
-          Subject: "[PROD ALERT] {{ .GroupLabels.alertname }} - {{ .GroupLabels.server }}"
+          Subject: "[{{ if eq .CommonLabels.severity \"critical\" }}🔴 CRITICAL{{ else if eq .CommonLabels.severity \"warning\" }}🟠 WARNING{{ else if eq .CommonLabels.severity \"info\" }}🔵 INFO{{ else }}⚪ UNKNOWN{{ end }}] [PROD ALERT] {{ .GroupLabels.alertname }} - {{ .GroupLabels.server }}"
 
   - name: "mail-receiver"
     email_configs:
-      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com"
+      - to: "adimaspangestu02@gmail.com, ammarans71@gmail.com"
         send_resolved: true
         html: '{{ template "email.custom.html" . }}'
         text: '{{ template "email.custom.text" . }}'
         headers:
-          Subject: "[MAIL SERVER] {{ .GroupLabels.alertname }}"
+          Subject: "[{{ if eq .CommonLabels.severity \"critical\" }}🔴 CRITICAL{{ else if eq .CommonLabels.severity \"warning\" }}🟠 WARNING{{ else if eq .CommonLabels.severity \"info\" }}🔵 INFO{{ else }}⚪ UNKNOWN{{ end }}] [MAIL SERVER] {{ .GroupLabels.alertname }}"
 
   - name: "elastic-receiver"
     email_configs:
-      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com"
+      - to: "adimaspangestu02@gmail.com, ammarans71@gmail.com"
         send_resolved: true
         html: '{{ template "email.custom.html" . }}'
         text: '{{ template "email.custom.text" . }}'
         headers:
-          Subject: "[ELASTICSEARCH] {{ .GroupLabels.alertname }}"
+          Subject: "[{{ if eq .CommonLabels.severity \"critical\" }}🔴 CRITICAL{{ else if eq .CommonLabels.severity \"warning\" }}🟠 WARNING{{ else if eq .CommonLabels.severity \"info\" }}🔵 INFO{{ else }}⚪ UNKNOWN{{ end }}] [ELASTICSEARCH] {{ .GroupLabels.alertname }}"
 
   - name: "gitea-receiver"
     email_configs:
-      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com"
+      - to: "adimaspangestu02@gmail.com, ammarans71@gmail.com"
         send_resolved: true
         html: '{{ template "email.custom.html" . }}'
         text: '{{ template "email.custom.text" . }}'
         headers:
-          Subject: "[GITEA] {{ .GroupLabels.alertname }} - {{ .GroupLabels.server }}"
+          Subject: "[{{ if eq .CommonLabels.severity \"critical\" }}🔴 CRITICAL{{ else if eq .CommonLabels.severity \"warning\" }}🟠 WARNING{{ else if eq .CommonLabels.severity \"info\" }}🔵 INFO{{ else }}⚪ UNKNOWN{{ end }}] [GITEA] {{ .GroupLabels.alertname }} - {{ .GroupLabels.server }}"
 
   - name: "dev-receiver"
     email_configs:
-      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com"
+      - to: "adimaspangestu02@gmail.com, ammarans71@gmail.com"
         send_resolved: true
         html: '{{ template "email.custom.html" . }}'
         text: '{{ template "email.custom.text" . }}'
         headers:
-          Subject: "[DEV] {{ .GroupLabels.alertname }} - {{ .GroupLabels.server }}"
+          Subject: "[{{ if eq .CommonLabels.severity \"critical\" }}🔴 CRITICAL{{ else if eq .CommonLabels.severity \"warning\" }}🟠 WARNING{{ else if eq .CommonLabels.severity \"info\" }}🔵 INFO{{ else }}⚪ UNKNOWN{{ end }}] [DEV] {{ .GroupLabels.alertname }} - {{ .GroupLabels.server }}"
 
   - name: "info-receiver"
     email_configs:
-      - to: "sysadmin.app@sateknologi.id, adimaspangestu02@gmail.com"
+      - to: "adimaspangestu02@gmail.com, ammarans71@gmail.com"
         send_resolved: false
         html: '{{ template "email.custom.html" . }}'
         text: '{{ template "email.custom.text" . }}'
         headers:
-          Subject: "[INFO] {{ .GroupLabels.alertname }} - {{ .GroupLabels.server }}"
+          Subject: "[{{ if eq .CommonLabels.severity \"critical\" }}🔴 CRITICAL{{ else if eq .CommonLabels.severity \"warning\" }}🟠 WARNING{{ else if eq .CommonLabels.severity \"info\" }}🔵 INFO{{ else }}⚪ UNKNOWN{{ end }}] [INFO] {{ .GroupLabels.alertname }} - {{ .GroupLabels.server }}"

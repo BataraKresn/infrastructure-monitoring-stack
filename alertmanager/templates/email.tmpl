@@ -1,49 +1,100 @@
 {{ define "email.custom.text" }}
-[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}
-Receiver: {{ .Receiver }}
-Environment: {{ .CommonLabels.env }}
-Total alerts: {{ len .Alerts }}
+[MONITORING ALERT] {{ .CommonLabels.alertname }}
+
+Status      : {{ .Status | toUpper }}
+Receiver    : {{ .Receiver }}
+Environment : {{ if .CommonLabels.env }}{{ .CommonLabels.env }}{{ else }}unknown{{ end }}
+Total Alerts: {{ len .Alerts }}
 {{ $publicURL := "https://grafana-sat.sateknologi.id" }}
 
 {{ range .Alerts }}
-- Alert: {{ .Labels.alertname }}
-  Status: {{ .Status }}
-  Severity: {{ .Labels.severity }}
-  Server: {{ .Labels.server }}
-  Summary: {{ if .Annotations.summary }}{{ .Annotations.summary }}{{ else }}(no summary){{ end }}
-  Description: {{ if .Annotations.description }}{{ .Annotations.description }}{{ else }}(no description){{ end }}
-  Alerting: {{ $publicURL }}/alerting/list
+------------------------------------------------------------
+Alert       : {{ .Labels.alertname }}
+State       : {{ .Status | toUpper }}
+Severity    : {{ if .Labels.severity }}{{ .Labels.severity }}{{ else }}n/a{{ end }}
+Server      : {{ if .Labels.server }}{{ .Labels.server }}{{ else }}n/a{{ end }}
+Instance    : {{ if .Labels.instance }}{{ .Labels.instance }}{{ else }}n/a{{ end }}
+Starts At   : {{ .StartsAt }}
+Ends At     : {{ .EndsAt }}
+Summary     : {{ if .Annotations.summary }}{{ .Annotations.summary }}{{ else }}(no summary){{ end }}
+Description : {{ if .Annotations.description }}{{ .Annotations.description }}{{ else }}(no description){{ end }}
+Source      : {{ if .GeneratorURL }}{{ .GeneratorURL }}{{ else }}n/a{{ end }}
 {{ end }}
 
-Login & Alerting: {{ $publicURL }}/alerting/list
+Grafana Alerting: {{ $publicURL }}/alerting/list
 {{ end }}
 
 {{ define "email.custom.html" }}
 <!DOCTYPE html>
 <html>
-  <body style="font-family:Arial,Helvetica,sans-serif;background:#f6f8fb;padding:16px;color:#0f172a;">
+  <body style="margin:0;font-family:Arial,Helvetica,sans-serif;background:#e9eef6;padding:24px;color:#0f172a;">
     {{ $publicURL := "https://grafana-sat.sateknologi.id" }}
-    <div style="max-width:760px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;">
-      <h2 style="margin:0 0 8px 0;">🚨 [{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}</h2>
-      <p style="margin:0 0 12px 0;color:#475569;">
-        Receiver: <strong>{{ .Receiver }}</strong> • Env: <strong>{{ .CommonLabels.env }}</strong> • Alerts: <strong>{{ len .Alerts }}</strong>
-      </p>
+    <div style="max-width:860px;margin:0 auto;background:#ffffff;border:1px solid #d9e2ef;border-radius:18px;overflow:hidden;box-shadow:0 10px 26px rgba(15,23,42,0.10);">
+
+      <div style="height:6px;background:{{ if eq .Status "resolved" }}linear-gradient(90deg,#10b981,#059669){{ else }}linear-gradient(90deg,#ef4444,#f97316){{ end }};"></div>
+
+      <div style="padding:26px 20px;background:{{ if eq .Status "resolved" }}linear-gradient(135deg,#064e3b,#065f46){{ else }}linear-gradient(135deg,#7f1d1d,#c2410c){{ end }};color:#ffffff;text-align:center;">
+        <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.88;font-weight:700;">SAT Monitoring Notification</div>
+        <div style="font-size:28px;font-weight:800;line-height:1.2;margin-top:8px;">{{ .CommonLabels.alertname }}</div>
+        <div style="margin-top:12px;display:inline-block;padding:8px 14px;border-radius:999px;background:{{ if eq .Status "resolved" }}#10b981{{ else }}#fb923c{{ end }};color:#ffffff;font-size:12px;font-weight:800;letter-spacing:.06em;">
+          {{ .Status | toUpper }}
+        </div>
+      </div>
+
+      <div style="padding:16px 20px;border-bottom:1px solid #e2e8f0;background:#f8fafc;">
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <tr>
+            <td style="padding:6px 0;color:#64748b;width:160px;">Receiver</td>
+            <td style="padding:6px 0;font-weight:700;color:#0f172a;">{{ .Receiver }}</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0;color:#64748b;">Environment</td>
+            <td style="padding:6px 0;">{{ if .CommonLabels.env }}{{ .CommonLabels.env }}{{ else }}unknown{{ end }}</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0;color:#64748b;">Total Alerts</td>
+            <td style="padding:6px 0;font-weight:700;">{{ len .Alerts }}</td>
+          </tr>
+        </table>
+      </div>
 
       {{ range .Alerts }}
-      <div style="border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:12px;">
-        <div style="font-size:16px;font-weight:700;margin-bottom:8px;">{{ .Labels.alertname }} ({{ .Status }})</div>
-        <table style="width:100%;border-collapse:collapse;font-size:14px;">
-          <tr><td style="padding:4px 0;color:#64748b;width:160px;">Severity</td><td>{{ .Labels.severity }}</td></tr>
-          <tr><td style="padding:4px 0;color:#64748b;">Server</td><td>{{ .Labels.server }}</td></tr>
-          <tr><td style="padding:4px 0;color:#64748b;">Summary</td><td>{{ if .Annotations.summary }}{{ .Annotations.summary }}{{ else }}(no summary){{ end }}</td></tr>
-          <tr><td style="padding:4px 0;color:#64748b;">Description</td><td>{{ if .Annotations.description }}{{ .Annotations.description }}{{ else }}(no description){{ end }}</td></tr>
+      <div style="padding:16px 20px;border-bottom:1px solid #eef2f7;background:#ffffff;">
+        <div style="border:1px solid #e2e8f0;border-left:5px solid {{ if eq .Status "resolved" }}#10b981{{ else }}#f97316{{ end }};border-radius:12px;padding:14px 14px 12px 14px;background:#fcfdff;">
+        <table style="width:100%;border-collapse:collapse;margin-bottom:10px;">
+          <tr>
+            <td style="font-size:17px;font-weight:800;color:#0f172a;vertical-align:middle;">
+              {{ .Labels.alertname }}
+              <span style="font-size:12px;font-weight:800;color:#475569;">({{ .Status | toUpper }})</span>
+            </td>
+            <td style="text-align:right;vertical-align:middle;">
+              <span style="display:inline-block;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.03em;color:#ffffff;background:{{ if eq .Labels.severity "critical" }}#dc2626{{ else if eq .Labels.severity "warning" }}#f59e0b{{ else if eq .Labels.severity "info" }}#2563eb{{ else }}#64748b{{ end }};">
+                {{ if .Labels.severity }}{{ .Labels.severity | toUpper }}{{ else }}N/A{{ end }}
+              </span>
+            </td>
+          </tr>
+        </table>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;line-height:1.45;">
+          <tr><td style="padding:5px 0;color:#64748b;width:160px;">Severity</td><td style="padding:5px 0;font-weight:700;">{{ if .Labels.severity }}{{ .Labels.severity | toUpper }}{{ else }}N/A{{ end }}</td></tr>
+          <tr><td style="padding:5px 0;color:#64748b;">Server</td><td style="padding:5px 0;">{{ if .Labels.server }}{{ .Labels.server }}{{ else }}n/a{{ end }}</td></tr>
+          <tr><td style="padding:5px 0;color:#64748b;">Instance</td><td style="padding:5px 0;">{{ if .Labels.instance }}{{ .Labels.instance }}{{ else }}n/a{{ end }}</td></tr>
+          <tr><td style="padding:5px 0;color:#64748b;">Starts At</td><td style="padding:5px 0;">{{ .StartsAt }}</td></tr>
+          <tr><td style="padding:5px 0;color:#64748b;">Ends At</td><td style="padding:5px 0;">{{ .EndsAt }}</td></tr>
+          <tr><td style="padding:5px 0;color:#64748b;vertical-align:top;">Summary</td><td style="padding:5px 0;">{{ if .Annotations.summary }}{{ .Annotations.summary }}{{ else }}(no summary){{ end }}</td></tr>
+          <tr><td style="padding:5px 0;color:#64748b;vertical-align:top;">Description</td><td style="padding:5px 0;">{{ if .Annotations.description }}{{ .Annotations.description }}{{ else }}(no description){{ end }}</td></tr>
         </table>
 
-        <div style="margin-top:10px;">
-          <a href="{{ $publicURL }}/alerting/list" style="display:inline-block;padding:8px 12px;background:#2563eb;color:#fff;text-decoration:none;border-radius:8px;">Buka Alerting</a>
+        <div style="margin-top:12px;">
+          <a href="{{ if .GeneratorURL }}{{ .GeneratorURL }}{{ else }}{{ $publicURL }}/alerting/list{{ end }}" style="display:inline-block;padding:9px 14px;background:#334155;color:#fff;text-decoration:none;border-radius:10px;margin-right:8px;font-weight:700;">Open Source</a>
+          <a href="{{ $publicURL }}/alerting/list" style="display:inline-block;padding:9px 14px;background:#2563eb;color:#fff;text-decoration:none;border-radius:10px;font-weight:700;">Open Grafana Alerting</a>
+        </div>
         </div>
       </div>
       {{ end }}
+
+      <div style="padding:14px 20px;background:#f8fafc;color:#64748b;font-size:12px;text-align:center;">
+        This message is generated automatically by Alertmanager.
+      </div>
     </div>
   </body>
 </html>
