@@ -1,0 +1,54 @@
+{{/* ============================================================
+     SAT Monitoring – Telegram Notification Template
+     Parse mode: HTML
+     ============================================================ */}}
+
+{{ define "telegram.icon" -}}
+  {{- if eq .Status "resolved" }}✅{{ else if eq .Labels.severity "critical" }}🔴{{ else if eq .Labels.severity "warning" }}🟠{{ else if eq .Labels.severity "info" }}🔵{{ else }}⚪{{ end -}}
+{{ end }}
+
+{{ define "telegram.severity_label" -}}
+  {{- if eq .Labels.severity "critical" }}CRITICAL{{ else if eq .Labels.severity "warning" }}WARNING{{ else if eq .Labels.severity "info" }}INFO{{ else }}UNKNOWN{{ end -}}
+{{ end }}
+
+{{ define "telegram.message" -}}
+{{ $grafanaURL := "https://grafana-sat.sateknologi.id" -}}
+{{ if eq .Status "resolved" -}}
+✅ <b>RESOLVED</b> – {{ .CommonLabels.alertname }}
+{{- else if eq .CommonLabels.severity "critical" -}}
+🔴 <b>CRITICAL ALERT</b> – {{ .CommonLabels.alertname }}
+{{- else if eq .CommonLabels.severity "warning" -}}
+🟠 <b>WARNING ALERT</b> – {{ .CommonLabels.alertname }}
+{{- else -}}
+🔵 <b>ALERT</b> – {{ .CommonLabels.alertname }}
+{{- end }}
+
+<b>Status    :</b> {{ .Status | toUpper }}
+<b>Severity  :</b> {{ if .CommonLabels.severity }}{{ .CommonLabels.severity | toUpper }}{{ else }}N/A{{ end }}
+<b>Env       :</b> {{ if .CommonLabels.env }}{{ .CommonLabels.env }}{{ else }}unknown{{ end }}
+<b>Server    :</b> {{ if .CommonLabels.server }}{{ .CommonLabels.server }}{{ else }}n/a{{ end }}
+<b>Receiver  :</b> {{ .Receiver }}
+<b>Alerts    :</b> {{ len .Alerts }}
+{{ range .Alerts }}
+━━━━━━━━━━━━━━━━━━━━━━
+{{ template "telegram.icon" . }} <b>{{ .Labels.alertname }}</b> <code>[{{ template "telegram.severity_label" . }}]</code>
+
+<b>Instance  :</b> {{ if .Labels.instance }}{{ reReplaceAll `:\d+$` "" .Labels.instance }}{{ else }}n/a{{ end }}
+<b>Server    :</b> {{ if .Labels.server }}{{ .Labels.server }}{{ else }}n/a{{ end }}
+<b>Starts At :</b> {{ .StartsAt.Local.Format "2006-01-02 15:04:05 MST" }}
+{{- if eq .Status "resolved" }}
+<b>Ends At   :</b> {{ .EndsAt.Local.Format "2006-01-02 15:04:05 MST" }}
+{{- end }}
+
+📋 <b>Summary:</b>
+{{ if .Annotations.summary }}{{ .Annotations.summary }}{{ else }}<i>(no summary)</i>{{ end }}
+
+📝 <b>Description:</b>
+{{ if .Annotations.description }}{{ .Annotations.description }}{{ else }}<i>(no description)</i>{{ end }}
+{{ if .GeneratorURL }}
+🔗 <a href="{{ .GeneratorURL }}">Open Source</a>
+{{- end }}
+{{ end }}
+━━━━━━━━━━━━━━━━━━━━━━
+📊 <a href="{{ $grafanaURL }}/alerting/list">Grafana Alerting</a>
+{{- end }}

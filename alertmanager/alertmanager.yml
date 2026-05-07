@@ -1,11 +1,12 @@
 global:
   resolve_timeout: 5m
-  smtp_smarthost: "mail.sateknologi.id:587"
-  smtp_from: "admin@sateknologi.id"
-  smtp_auth_username: "admin@sateknologi.id"
-  smtp_auth_password: "66,MeNsus,{"
-  smtp_hello: "mail.sateknologi.id"
-  smtp_require_tls: true
+  # SMTP disabled – menggunakan Telegram untuk notifikasi
+  # smtp_smarthost: "mail.sateknologi.id:587"
+  # smtp_from: "admin@sateknologi.id"
+  # smtp_auth_username: "admin@sateknologi.id"
+  # smtp_auth_password: "..."
+  # smtp_hello: "mail.sateknologi.id"
+  # smtp_require_tls: true
 
 # -----------------------------------------------------------
 # Templates
@@ -18,7 +19,7 @@ templates:
 # -----------------------------------------------------------
 route:
   receiver: "default-receiver"
-  group_by: ["alertname", "server", "env"]
+  group_by: ["alertname", "server", "env", "severity"]
   group_wait: 10s
   group_interval: 5m
   repeat_interval: 4h
@@ -104,77 +105,65 @@ inhibit_rules:
 receivers:
 
   - name: "default-receiver"
-    email_configs:
-      - to: "adimaspangestu02@gmail.com, ammarans71@gmail.com"
+    telegram_configs:
+      - bot_token: "8672349913:AAHx4CF3dR0rL-0Vrco_7m5ooZR-77GenFE"
+        chat_id: -5144039557
+        parse_mode: "HTML"
         send_resolved: true
-        html: '{{ template "email.custom.html" . }}'
-        text: '{{ template "email.custom.text" . }}'
-        headers:
-          Subject: "[{{ if eq .CommonLabels.severity \"critical\" }}🔴 CRITICAL{{ else if eq .CommonLabels.severity \"warning\" }}🟠 WARNING{{ else if eq .CommonLabels.severity \"info\" }}🔵 INFO{{ else }}⚪ UNKNOWN{{ end }}] [MONITORING] {{ .GroupLabels.alertname }} - {{ .GroupLabels.server }}"
+        message: '{{ template "telegram.message" . }}'
 
   - name: "critical-receiver"
-    email_configs:
-      - to: "adimaspangestu02@gmail.com, ammarans71@gmail.com"
+    telegram_configs:
+      - bot_token: "8672349913:AAHx4CF3dR0rL-0Vrco_7m5ooZR-77GenFE"
+        chat_id: -5144039557
+        parse_mode: "HTML"
         send_resolved: true
-        html: '{{ template "email.custom.html" . }}'
-        text: '{{ template "email.custom.text" . }}'
-        headers:
-          Subject: "[{{ if eq .CommonLabels.severity \"critical\" }}🔴 CRITICAL{{ else if eq .CommonLabels.severity \"warning\" }}🟠 WARNING{{ else if eq .CommonLabels.severity \"info\" }}🔵 INFO{{ else }}⚪ UNKNOWN{{ end }}] [CRITICAL] {{ .GroupLabels.alertname }} - {{ .GroupLabels.server }}"
-    # Uncomment untuk integrasi Telegram:
-    # webhook_configs:
-    #   - url: "http://telegram-alertmanager:8080/alert"
-    #     send_resolved: true
+        message: '{{ template "telegram.message" . }}'
 
   - name: "prod-receiver"
-    email_configs:
-      - to: "adimaspangestu02@gmail.com, ammarans71@gmail.com"
+    telegram_configs:
+      - bot_token: "8672349913:AAHx4CF3dR0rL-0Vrco_7m5ooZR-77GenFE"
+        chat_id: -5144039557
+        parse_mode: "HTML"
         send_resolved: true
-        html: '{{ template "email.custom.html" . }}'
-        text: '{{ template "email.custom.text" . }}'
-        headers:
-          Subject: "[{{ if eq .CommonLabels.severity \"critical\" }}🔴 CRITICAL{{ else if eq .CommonLabels.severity \"warning\" }}🟠 WARNING{{ else if eq .CommonLabels.severity \"info\" }}🔵 INFO{{ else }}⚪ UNKNOWN{{ end }}] [PROD ALERT] {{ .GroupLabels.alertname }} - {{ .GroupLabels.server }}"
+        message: '{{ template "telegram.message" . }}'
 
   - name: "mail-receiver"
-    email_configs:
-      - to: "adimaspangestu02@gmail.com, ammarans71@gmail.com"
+    telegram_configs:
+      - bot_token: "8672349913:AAHx4CF3dR0rL-0Vrco_7m5ooZR-77GenFE"
+        chat_id: -5144039557
+        parse_mode: "HTML"
         send_resolved: true
-        html: '{{ template "email.custom.html" . }}'
-        text: '{{ template "email.custom.text" . }}'
-        headers:
-          Subject: "[{{ if eq .CommonLabels.severity \"critical\" }}🔴 CRITICAL{{ else if eq .CommonLabels.severity \"warning\" }}🟠 WARNING{{ else if eq .CommonLabels.severity \"info\" }}🔵 INFO{{ else }}⚪ UNKNOWN{{ end }}] [MAIL SERVER] {{ .GroupLabels.alertname }}"
+        message: '{{ template "telegram.message" . }}'
 
   - name: "elastic-receiver"
-    email_configs:
-      - to: "adimaspangestu02@gmail.com, ammarans71@gmail.com"
+    telegram_configs:
+      - bot_token: "8672349913:AAHx4CF3dR0rL-0Vrco_7m5ooZR-77GenFE"
+        chat_id: -5144039557
+        parse_mode: "HTML"
         send_resolved: true
-        html: '{{ template "email.custom.html" . }}'
-        text: '{{ template "email.custom.text" . }}'
-        headers:
-          Subject: "[{{ if eq .CommonLabels.severity \"critical\" }}🔴 CRITICAL{{ else if eq .CommonLabels.severity \"warning\" }}🟠 WARNING{{ else if eq .CommonLabels.severity \"info\" }}🔵 INFO{{ else }}⚪ UNKNOWN{{ end }}] [ELASTICSEARCH] {{ .GroupLabels.alertname }}"
+        message: '{{ template "telegram.message" . }}'
 
   - name: "gitea-receiver"
-    email_configs:
-      - to: "adimaspangestu02@gmail.com, ammarans71@gmail.com"
+    telegram_configs:
+      - bot_token: "8672349913:AAHx4CF3dR0rL-0Vrco_7m5ooZR-77GenFE"
+        chat_id: -5144039557
+        parse_mode: "HTML"
         send_resolved: true
-        html: '{{ template "email.custom.html" . }}'
-        text: '{{ template "email.custom.text" . }}'
-        headers:
-          Subject: "[{{ if eq .CommonLabels.severity \"critical\" }}🔴 CRITICAL{{ else if eq .CommonLabels.severity \"warning\" }}🟠 WARNING{{ else if eq .CommonLabels.severity \"info\" }}🔵 INFO{{ else }}⚪ UNKNOWN{{ end }}] [GITEA] {{ .GroupLabels.alertname }} - {{ .GroupLabels.server }}"
+        message: '{{ template "telegram.message" . }}'
 
   - name: "dev-receiver"
-    email_configs:
-      - to: "adimaspangestu02@gmail.com, ammarans71@gmail.com"
+    telegram_configs:
+      - bot_token: "8672349913:AAHx4CF3dR0rL-0Vrco_7m5ooZR-77GenFE"
+        chat_id: -5144039557
+        parse_mode: "HTML"
         send_resolved: true
-        html: '{{ template "email.custom.html" . }}'
-        text: '{{ template "email.custom.text" . }}'
-        headers:
-          Subject: "[{{ if eq .CommonLabels.severity \"critical\" }}🔴 CRITICAL{{ else if eq .CommonLabels.severity \"warning\" }}🟠 WARNING{{ else if eq .CommonLabels.severity \"info\" }}🔵 INFO{{ else }}⚪ UNKNOWN{{ end }}] [DEV] {{ .GroupLabels.alertname }} - {{ .GroupLabels.server }}"
+        message: '{{ template "telegram.message" . }}'
 
   - name: "info-receiver"
-    email_configs:
-      - to: "adimaspangestu02@gmail.com, ammarans71@gmail.com"
+    telegram_configs:
+      - bot_token: "8672349913:AAHx4CF3dR0rL-0Vrco_7m5ooZR-77GenFE"
+        chat_id: -5144039557
+        parse_mode: "HTML"
         send_resolved: false
-        html: '{{ template "email.custom.html" . }}'
-        text: '{{ template "email.custom.text" . }}'
-        headers:
-          Subject: "[{{ if eq .CommonLabels.severity \"critical\" }}🔴 CRITICAL{{ else if eq .CommonLabels.severity \"warning\" }}🟠 WARNING{{ else if eq .CommonLabels.severity \"info\" }}🔵 INFO{{ else }}⚪ UNKNOWN{{ end }}] [INFO] {{ .GroupLabels.alertname }} - {{ .GroupLabels.server }}"
+        message: '{{ template "telegram.message" . }}'

@@ -56,10 +56,14 @@ services:
       - "--config.file=/etc/alertmanager/alertmanager.yml"
       - "--storage.path=/alertmanager"
       - "--web.external-url=https://${GRAFANA_DOMAIN:-localhost}"
+    environment:
+      - TZ=Asia/Jakarta
     volumes:
       - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
       - ./alertmanager/templates:/etc/alertmanager/templates:ro
       - /data/alertmanager:/alertmanager
+      - /usr/share/zoneinfo:/usr/share/zoneinfo:ro
+      - /usr/share/zoneinfo/Asia/Jakarta:/etc/localtime:ro
     ports:
       - "9093:9093"
     extra_hosts:
